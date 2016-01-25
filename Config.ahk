@@ -38,7 +38,7 @@ PMToLastMuteOrDMKey = !vk55                      ; Клавиша (по-умолчанию, Alt+U)
 
 ; TagName (WH)
 
-TagNameAutostartBoolean = 1                      ; 1 - Автоматически запускать TagName при старте скрипта
+TagNameAutostartBoolean = 0                      ; 1 - Автоматически запускать TagName при старте скрипта
                                                  ; 0 - Не запускать автоматически (запускать только после ввода `/wh` в игре)
 
 

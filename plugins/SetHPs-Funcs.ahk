@@ -3,7 +3,7 @@
 ;; Description: ѕлагин добавл€ет возможность быстро раздать HP всем игрокам, наход€щимс€ в указанном радиусе от вас
 ;; CMD: /sethps
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b8 (Dec 26, 2015)
+;; Version: 1.0b9 (Jan 23, 2015)
 ;; Required modules: SAMP-UDF-Ex, CMD, SAMP-NearbyPlayers
 ;;
 
@@ -19,7 +19,7 @@ class SetHPs
     if (this._run && this._playersList.MaxIndex()) {
       sendChatMessage("/sethp " this._playersList[1] " " this._hp)
 
-      showGameText("SetHP [" (this._playersCount + 1 - this._playersList.MaxIndex()) "/" this._playersCount "]", 1200, 4)
+      showGameText("SetHP [ID: " this._playersList[1] "] [" (this._playersCount + 1 - this._playersList.MaxIndex()) "/" this._playersCount "]", 1200, 4)
 
       this._playersList.RemoveAt(1)
     } else {

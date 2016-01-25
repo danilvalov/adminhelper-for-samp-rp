@@ -3,7 +3,7 @@
 ;; Description: Плагин для выдачи объектов игрокам через `/hbject`
 ;; CMD: /hbj, hbjs
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b8 (Dec 26, 2015)
+;; Version: 1.0b9 (Jan 23, 2015)
 ;; Required modules: SAMP-UDF-Ex, CMD, SAMP-NearbyPlayers
 ;;
 
@@ -204,7 +204,7 @@ class Hbj
 
       sendChatMessage(CmdLine)
 
-      showGameText("Hbj [CMD:" this.currentCmdIndex "/" this.hbjsList[this.currentHbjList[this.currentHbjIndex]].MaxIndex() "] [Obj:" this.currentHbjIndex "/" this.currentHbjList.MaxIndex() "] [Players:" (this._playersCount + 1 - this._playersList.MaxIndex()) "/" this._playersCount "]", 1200, 4)
+      showGameText("Hbj [ID: " this._playersList[1] "] [CMD:" this.currentCmdIndex "/" this.hbjsList[this.currentHbjList[this.currentHbjIndex]].MaxIndex() "] [Obj:" this.currentHbjIndex "/" this.currentHbjList.MaxIndex() "] [Players:" (this._playersCount + 1 - this._playersList.MaxIndex()) "/" this._playersCount "]", 1200, 4)
 
       this.currentCmdIndex++
       if (SubStr(CmdLine, 1, StrLen("/hbject ")) = "/hbject ") {

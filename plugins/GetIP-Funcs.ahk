@@ -3,13 +3,14 @@
 ;; Description: Плагин добавляет функционал получения местоположения игрока по его IP
 ;; CMD: /tgetip, /geoip
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b3 (May 17, 2015)
+;; Version: 1.0b9 (Jan 23, 2015)
 ;; Required modules: SAMP-UDF-Ex, Chatlog, CMD, JSON
 ;;
 
 class GetIP
 {
   SetNikLastId := ""
+  GetIPUser := ""
   RegGetIP := ""
   LastGetIP := ""
 
@@ -38,6 +39,24 @@ class GetIP
     Return Round(6378137 * ACOS(COS(lat1) * COS(lat2) * COS(lng1 - lng2) + SIN(lat1) * SIN(lat2)))
   }
 
+  getIPData(IP)
+  {
+    RegExMatch(IP, "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", CheckIP)
+
+    if (StrLen(IP) && StrLen(CheckIP) && IP = CheckIP) {
+      UrlDownloadToFile, % "http://ip-api.com/json/" IP, ip.json
+      FileRead, IP_JSON, *P65001 ip.json
+      FileDelete, ip.json
+      RegGetIP_Data := JSON.parse(IP_JSON)
+
+      Return RegGetIP_Data
+    } else {
+      addMessageToChatWindow("{FF0000} Введённый IP некорректен.")
+
+      Return False
+    }
+  }
+
   get(notAdminChat = False)
   {
     global GetIPToAdminChatBoolean
@@ -59,15 +78,12 @@ class GetIP
     DistanceNull := False
 
     if (StrLen(this.RegGetIP) && StrLen(this.LastGetIP)) {
-      UrlDownloadToFile, % "http://ip-api.com/json/" this.RegGetIP, reggetip.json
-      FileRead, RegGetIP_JSON, *P65001 reggetip.json
-      FileDelete, reggetip.json
-      RegGetIP_Data := JSON.parse(RegGetIP_JSON)
+      RegGetIP_Data := this.getIPData(this.RegGetIP)
+      LastGetIP_Data := this.getIPData(this.LastGetIP)
 
-      UrlDownloadToFile, % "http://ip-api.com/json/" this.LastGetIP, lastgetip.json
-      FileRead, LastGetIP_JSON, *P65001 lastgetip.json
-      FileDelete, lastgetip.json
-      LastGetIP_Data := JSON.parse(LastGetIP_JSON)
+      if (!RegGetIP_Data || !LastGetIP_Data) {
+        Return False
+      }
 
       Distance := "N/A"
       DistanceValue := "N/A"
@@ -108,21 +124,23 @@ class GetIP
         FullLastGetIP_Location := StrLen(LastGetIP_Data["regionName"]) ? (LastGetIP_Data["regionName"] = FullLastGetIP_Location ? FullLastGetIP_Location : (StrLen(FullLastGetIP_Location) ? FullLastGetIP_Location ", " : "") LastGetIP_Data["regionName"]) : FullLastGetIP_Location
         FullLastGetIP_Location := StrLen(LastGetIP_Data["country"]) ? (StrLen(FullLastGetIP_Location) ? FullLastGetIP_Location ", " : "") LastGetIP_Data["country"] : FullLastGetIP_Location
         FullLastGetIP_Location := StrLen(LastGetIP_Data["isp"]) ? (StrLen(FullLastGetIP_Location) ? FullLastGetIP_Location ". " : "") "Провайдер: " LastGetIP_Data["isp"] : FullLastGetIP_Location
-        FullLastGetIP_Location := StrLen(FullLastGetIP_Location) ? FullLastGetIP_Location "." : "N/A"
+        FullLastGetIP_Location := StrLen(FullLastGetIP_Location) ? FullLastGetIP_Location : "N/A"
       } else {
         LastGetIP_Location := "N/A"
 
         FullLastGetIP_Location := "N/A"
       }
 
-      addMessageToChatWindow("Регистрация: " FullRegGetIP_Location)
-      addMessageToChatWindow("Текущий IP: " FullLastGetIP_Location)
+      addMessageToChatWindow("{C4EFFF}Игрок: {FFFF00}" this.GetIPUser)
+      addMessageToChatWindow("{C4EFFF}Регистрация: {FFFFFF}" FullRegGetIP_Location "{C4EFFF}.")
+      addMessageToChatWindow("{C4EFFF}Текущий IP: {FFFFFF}" FullLastGetIP_Location "{C4EFFF}.")
+      addMessageToChatWindow("{C4EFFF}Дистанция: " (Distance = "N/A" ? "{FFFFFF}" : (Distance = 0 ? "{00FF00}" : (Round(Distance / 1000, 2) < 300 ? "{FFFF00}" : "{FF0000}"))) DistanceValue "{C4EFFF}.")
 
       if (GetIPToAdminChatBoolean && !notAdminChat) {
-        sendChatMessage("/a Возможно: " RegGetIP_Location " / " LastGetIP_Location " / " DistanceValue)
+        sendChatMessage("/a " this.GetIPUser ": " RegGetIP_Location " / " LastGetIP_Location " / " DistanceValue ".")
       }
     } else {
-      addMessageToChatWindow("{FF0000} Не найдено ни одного IP")
+      addMessageToChatWindow("{FF0000} Не найдено ни одного IP.")
     }
 
     Return DistanceNull
@@ -131,6 +149,7 @@ class GetIP
   getOnlyForMe(Data)
   {
     User := RegExReplace(Data[2], "[^a-zA-Z0-9\_]", "")
+    RegExMatch(Data[2], "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", UserIP)
 
     if (StrLen(User) && User = Data[2]) {
       Sleep 1200
@@ -139,26 +158,48 @@ class GetIP
 
       Chatlog.reader()
 
-      this.RegGetIP :=
-      this.LastGetIP :=
+      this.GetIPUser := ""
+      this.RegGetIP := ""
+      this.LastGetIP := ""
 
       if (StrLen(UserId) && UserId = User) {
         sendChatMessage("/getip " UserId)
       } else {
+        this.GetIPUser := User
         sendChatMessage("/agetip " User)
       }
 
       Sleep 500
 
-      this.get(True)
-    } else {
-      if (!StrLen(User)) {
-        addMessageToChatWindow("{FF0000} Вы не указали ID игрока или его ник")
-      } else {
-        addMessageToChatWindow("{FF0000} Вы указали некорректный ID игрока или его ник")
+      this.get(!StrLen(Data[3]))
+    } else if (StrLen(UserIP) && UserIP = Data[2]) {
+      GetIP_Data := this.getIPData(UserIP)
+
+      if (StrLen(Data[3])) {
+        GetIP_Location := StrLen(GetIP_Data["city"]) ? GetIP_Data["city"] : ""
+        GetIP_Location := StrLen(GetIP_Data["country"]) ? (StrLen(GetIP_Location) ? GetIP_Location ", " : "") GetIP_Data["country"] : GetIP_Location
+        GetIP_Location := StrLen(GetIP_Location) ? GetIP_Location : "N/A"
+
+        Sleep 1200
+
+        sendChatMessage("/a IP " UserIP " расположен: " GetIP_Location ".")
       }
 
-      addMessageToChatWindow("{FFFF00} Правильный формат ввода: {FFFFFF}/geoip [id_игрока] {FFFF00}или {FFFFFF}/geoip [ник_игрока]")
+      FullGetIP_Location := StrLen(GetIP_Data["city"]) ? GetIP_Data["city"] : ""
+      FullGetIP_Location := StrLen(GetIP_Data["regionName"]) ? (GetIP_Data["regionName"] = FullGetIP_Location ? FullGetIP_Location : (StrLen(FullGetIP_Location) ? FullGetIP_Location ", " : "") GetIP_Data["regionName"]) : FullGetIP_Location
+      FullGetIP_Location := StrLen(GetIP_Data["country"]) ? (StrLen(FullGetIP_Location) ? FullGetIP_Location ", " : "") GetIP_Data["country"] : FullGetIP_Location
+      FullGetIP_Location := StrLen(GetIP_Data["isp"]) ? (StrLen(FullGetIP_Location) ? FullGetIP_Location ". " : "") "Провайдер: " GetIP_Data["isp"] : FullGetIP_Location
+      FullGetIP_Location := StrLen(FullGetIP_Location) ? FullGetIP_Location : "N/A"
+
+      addMessageToChatWindow("Местоположение IP " UserIP ": " FullGetIP_Location ".")
+    } else {
+      if (!StrLen(User)) {
+        addMessageToChatWindow("{FF0000} Вы не указали ID игрока или его ник.")
+      } else {
+        addMessageToChatWindow("{FF0000} Вы указали некорректный ID игрока или его ник.")
+      }
+
+      addMessageToChatWindow("{FFFF00} Правильный формат ввода: {FFFFFF}/geoip [id_игрока] {FFFF00}или {FFFFFF}/geoip [ник_игрока] {FFFF00}или {FFFFFF}/geoip [ip_игрока]")
     }
 
     Return
@@ -191,8 +232,9 @@ class GetIP
   {
     Chatlog.reader()
 
-    this.RegGetIP :=
-    this.LastGetIP :=
+    this.GetIPUser := ""
+    this.RegGetIP := ""
+    this.LastGetIP := ""
 
     sendChatMessage("/getip " GetIP.SetNikLastId)
 
@@ -220,8 +262,9 @@ class GetIP
 
         sendChatMessage("/getip " Id)
 
-        this.RegGetIP :=
-        this.LastGetIP :=
+        this.GetIPUser := ""
+        this.RegGetIP := ""
+        this.LastGetIP := ""
 
         Sleep 1100
 
@@ -252,14 +295,18 @@ GetIP := new GetIP()
 GetIPChatlogChecker(ChatlogString)
 {
   if (SubStr(Trim(ChatlogString), 1, 5) = "Nik [" && (InStr(ChatlogString, "R-IP [") || InStr(ChatlogString, "Register-IP [")) && (InStr(ChatlogString, "L-IP [") || InStr(ChatlogString, "Last-IP ["))) {
-      RegExMatch(ChatlogString, "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", RegTempGetIP)
-      RegExMatch(ChatlogString, "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", LastTempGetIP, -17)
+    TempGetIPUser := SubStr(Trim(ChatlogString), StrLen("Nik [") + 1)
+    TempGetIPUser := SubStr(TempGetIPUser, 1, InStr(TempGetIPUser, "]") - 1)
 
-      if (StrLen(RegTempGetIP) && StrLen(LastTempGetIP)) {
-        GetIP.RegGetIP := RegTempGetIP
-        GetIP.LastGetIP := LastTempGetIP
-      }
+    RegExMatch(ChatlogString, "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", RegTempGetIP)
+    RegExMatch(ChatlogString, "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", LastTempGetIP, -17)
+
+    if (StrLen(RegTempGetIP) && StrLen(LastTempGetIP)) {
+      GetIP.GetIPUser := TempGetIPUser
+      GetIP.RegGetIP := RegTempGetIP
+      GetIP.LastGetIP := LastTempGetIP
     }
+  }
 }
 
 Chatlog.checker.Insert("GetIPChatlogChecker")

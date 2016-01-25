@@ -3,7 +3,7 @@
 ;; Description: ѕлагин добавл€ет возможность быстро собрать список игроков дл€ “елепортировани€ (наход€щихс€ р€дом или по смс) и запустить цикл телепортации
 ;; CMD: /atp, /rtp, /ltp, /ntp, /gtp, /ctp, /stp, /tphelp, /helptp, /htp
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b7 (Nov 08, 2015)
+;; Version: 1.0b9 (Jan 23, 2015)
 ;; Required modules: SAMP-UDF-Ex, SAMP-UDF-Addon, SAMP-UsersListUpdater, CMD, Chatlog, SAMP-NearbyPlayers, IgnoreList
 ;;
 
@@ -342,7 +342,7 @@ class TP
       if (this._playersSMSList.MaxIndex()) {
         sendChatMessage("/gethere " this._playersSMSList[1])
 
-        showGameText("Teleporting [" (this._playersList.MaxIndex() + 1 - this._playersSMSList.MaxIndex()) "/" this._playersList.MaxIndex() "]", 1200, 4)
+        showGameText("Teleporting [ID: " this._playersSMSList[1] "] [" (this._playersList.MaxIndex() + 1 - this._playersSMSList.MaxIndex()) "/" this._playersList.MaxIndex() "]", 1200, 4)
 
         this._playersSMSList.RemoveAt(1)
       }
@@ -358,7 +358,7 @@ class TP
     if (this.__running && this._playersListForCurrentTP.MaxIndex()) {
       sendChatMessage("/gethere " this._playersListForCurrentTP[1])
 
-      showGameText("Teleporting [" (this._playersList.MaxIndex() + 1 - this._playersListForCurrentTP.MaxIndex()) "/" this._playersList.MaxIndex() "]", 1200, 4)
+      showGameText("Teleporting [ID: " this._playersListForCurrentTP[1] "] [" (this._playersList.MaxIndex() + 1 - this._playersListForCurrentTP.MaxIndex()) "/" this._playersList.MaxIndex() "]", 1200, 4)
 
       this._playersListForCurrentTP.RemoveAt(1)
     } else {

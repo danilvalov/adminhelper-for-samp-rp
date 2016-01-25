@@ -52,7 +52,6 @@ if (AdminLVL >= 1) {
 
 ;;   2 lvl
 if (AdminLVL >= 2) {
-#include plugins\CheckerID.ahk
 #include plugins\AutoHP-Funcs.ahk
 #include plugins\ReconLastPM-Funcs.ahk
 #include plugins\ReconLastWarning-Funcs.ahk
