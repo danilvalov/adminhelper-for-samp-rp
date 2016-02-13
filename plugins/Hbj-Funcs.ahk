@@ -54,9 +54,11 @@ class Hbj
       }
     } else {
       MsgBox, Ошибка: не удаётся открыть файл со списком объектов
+
+      Return False
     }
 
-    Return
+    Return True
   }
 
   checkHbjName()

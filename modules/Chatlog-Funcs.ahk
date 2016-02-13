@@ -6,6 +6,8 @@
 
 class Chatlog
 {
+  __chatlogFilePath := A_MyDocuments "\GTA San Andreas User Files\SAMP\chatlog.txt"
+
   __lastLineChatlog := 1
 
   __timerInit := 0
@@ -49,7 +51,7 @@ class Chatlog
   {
     LineCount := 1
   
-    FileRead, Contents, %A_MyDocuments%\GTA San Andreas User Files\SAMP\chatlog.txt
+    FileRead, Contents, % this.__chatlogFilePath
     if not ErrorLevel
     {
       Loop, parse, Contents, `n, `r

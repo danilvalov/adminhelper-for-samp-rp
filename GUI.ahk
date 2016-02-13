@@ -18,10 +18,10 @@ class AdminHelperGui
   countSymbolsBeforeComments := 50
 
   adminLVL := {}
-  ignoreList := {}
 
   modulesList := {}
   modulesListRequired := {}
+  modulesConfigsList := {}
   pluginsList := {}
   pluginsConfigsList := {}
   moduleIncludeStartLine := "#include modules\"
@@ -49,11 +49,11 @@ class AdminHelperGui
   trayMenuGeneration()
   {
     Menu, Tray, NoStandard
-    Menu, Tray, Add, AdminHelper, GuiOpen
+    Menu, Tray, Add, AdminHelper, SettingsGuiOpen
     Menu, Tray, Disable, AdminHelper
     Menu, Tray, Add
     Menu, Tray, Add, Перезапустить, ScriptReload
-    Menu, Tray, Add, Настройки, GuiOpen
+    Menu, Tray, Add, Настройки, SettingsGuiOpen
     Menu, Tray, Default, Настройки
     Menu, Tray, Add
     Menu, Tray, Add, Выйти, AppExit
@@ -63,25 +63,23 @@ class AdminHelperGui
 
   guiGeneration()
   {
-    Gui, New
+    Gui, Settings:New
 
-    Gui, Default
+    Gui, Settings:Default
 
-    Gui, +LastFound
+    Gui, Settings:+LastFound
 
     this.pluginsViewGeneration()
 
     this.userBindsGeneration()
 
-    this.ignoreListGeneration()
+    Gui, Settings:Tab
 
-    Gui, Tab
+    Gui, Settings:Add, Button, x10 gGuiSave, Сохранить
 
-    Gui, Add, Button, x10 gGuiSave, Сохранить
+    Gui, Settings:Add, Button, x+5 gSettingsGuiClose, Отменить
 
-    Gui, Add, Button, x+5 gGuiClose, Отменить
-
-    Gui, Show, , % this.windowTitle
+    Gui, Settings:Show, , % this.windowTitle
 
     Return WinExist()
   }
@@ -122,6 +120,11 @@ class AdminHelperGui
               Loop, Parse, Contents, `n, `r
               {
                 ModuleLine := Trim(A_LoopField)
+                if (SubStr(ModuleLine, 1, 1) = ";" && InStr(ModuleLine, "Description:")) {
+                  ModuleDescription := SubStr(ModuleLine, InStr(ModuleLine, "Description:") + StrLen("Description:"))
+                  ModuleDescription := Trim(ModuleDescription)
+                  this.modulesList[ModuleName]["Description"] := ModuleDescription
+                }
                 if (SubStr(ModuleLine, 1, 1) = ";" && InStr(ModuleLine, "Required modules:")) {
                   this.modulesList[ModuleName]["RequiredModules"] := []
                   ModuleRequiredModules := SubStr(ModuleLine, InStr(ModuleLine, "Required modules:") + StrLen("Required modules:"))
@@ -206,13 +209,15 @@ class AdminHelperGui
   {
     this.pluginsListRead()
 
-    TabString := "Плагины|Биндер|ИгнорЛист"
-    TabString := this.tabPluginsListGenerator(TabString)
+    TabString := "Плагины|Биндер"
+    TabString := this.tabListGenerator(TabString)
 
     TabWidth := this.windowWidth - 20
     TabHeight := this.windowHeight - 40
     LabelWidth := TabWidth - 35
-    Gui, Add, Tab2, w%TabWidth% h%TabHeight%, %TabString%
+    Gui, Settings:Add, Tab2, w%TabWidth% h%TabHeight%, %TabString%
+
+    this.modulesTabsGeneration(LabelWidth)
 
     this.pluginsListGeneration(LabelWidth)
 
@@ -225,7 +230,7 @@ class AdminHelperGui
   {
     Global
 
-    Gui, Tab, 1
+    Gui, Settings:Tab, 1
 
     Local AdminLVLValue := this.adminLVL.Value
     Local AdminLVLDescription := this.adminLVL.Description
@@ -236,7 +241,32 @@ class AdminHelperGui
     For PluginName, PluginData in this.pluginsList {
       Local PluginStatus := PluginData["Status"]
       Local PluginDescription := PluginData["Description"]
-      Gui, Add, Checkbox, +Wrap w%LabelWidth% y+15 vGuiPlugin%PluginName%Status checked%PluginStatus%, %PluginName% - %PluginDescription%
+      Gui, Settings:Add, Checkbox, +Wrap w%LabelWidth% y+15 vGuiPlugin%PluginName%Status checked%PluginStatus%, %PluginName% - %PluginDescription%
+    }
+
+    Return
+  }
+
+  modulesTabsGeneration(LabelWidth)
+  {
+    For ModuleName, ModuleVariableObject in this.modulesConfigsList {
+      ModuleDescription := this.modulesList[ModuleName]["Description"]
+      ModuleCmd := this.modulesList[ModuleName]["Cmd"]
+      Gui, Settings:Tab, %ModuleName%, , Exact
+      Gui, Settings:Font, Bold
+      Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+15, %ModuleName%
+      Gui, Settings:Font
+      Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+10, %ModuleDescription%
+
+      if (StrLen(ModuleCmd)) {
+        Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+10, Список доступных команд: %ModuleCmd%
+      }
+
+      For VariableName, VariableData in ModuleVariableObject {
+        VariableValue := VariableData.Value
+        VariableDescription := VariableData.Description
+        this.inputGeneration(VariableName, VariableValue, VariableDescription, LabelWidth)
+      }
     }
 
     Return
@@ -247,14 +277,14 @@ class AdminHelperGui
     For PluginName, PluginVariableObject in this.pluginsConfigsList {
       PluginDescription := this.pluginsList[PluginName]["Description"]
       PluginCmd := this.pluginsList[PluginName]["Cmd"]
-      Gui, Tab, %PluginName%, , Exact
-      Gui, Font, Bold
-      Gui, Add, Text, +Wrap w%LabelWidth% y+15, %PluginName%
-      Gui, Font
-      Gui, Add, Text, +Wrap w%LabelWidth% y+10, %PluginDescription%
+      Gui, Settings:Tab, %PluginName%, , Exact
+      Gui, Settings:Font, Bold
+      Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+15, %PluginName%
+      Gui, Settings:Font
+      Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+10, %PluginDescription%
 
       if (StrLen(PluginCmd)) {
-        Gui, Add, Text, +Wrap w%LabelWidth% y+10, Список доступных команд: %PluginCmd%
+        Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+10, Список доступных команд: %PluginCmd%
       }
 
       For VariableName, VariableData in PluginVariableObject {
@@ -272,26 +302,26 @@ class AdminHelperGui
     Global
 
     if (SubStr(VariableName, -2) = "Key") {
-      Gui, Add, Text, +Wrap w%LabelWidth% y+15, %VariableDescription%:
-      Gui, Add, Hotkey, w150 vGui%VariableName%Input y+5, %VariableValue%
+      Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+15, %VariableDescription%:
+      Gui, Settings:Add, Hotkey, w150 vGui%VariableName%Input y+5, %VariableValue%
     } else if (SubStr(VariableName, -6) = "Boolean") {
       if (SubStr(VariableDescription, 1, 4) = "1 - ") {
         VariableDescription := SubStr(VariableDescription, 5)
       }
-      Gui, Add, Checkbox, +Wrap w%LabelWidth% y+15 vGui%VariableName%Input checked%VariableValue%, %VariableDescription%
+      Gui, Settings:Add, Checkbox, +Wrap w%LabelWidth% y+15 vGui%VariableName%Input checked%VariableValue%, %VariableDescription%
     } else if (SubStr(VariableName, -3) = "File") {
        Local TextAreaWidth := this.windowWidth - 45
        Local TextAreaRowsCount := (this.windowHeight - 170) / 14
        Local FileContents
        FileRead, FileContents, %A_ScriptDir%\%VariableValue%
-       Gui, Add, Text, +Wrap w%LabelWidth% y+15, %VariableDescription%:
-       Gui, Add, Edit, r%TextAreaRowsCount% w%TextAreaWidth% vGui%VariableName%Input, %FileContents%
+       Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+15, %VariableDescription%:
+       Gui, Settings:Add, Edit, r%TextAreaRowsCount% w%TextAreaWidth% vGui%VariableName%Input, %FileContents%
      } else {
-      Gui, Add, Text, +Wrap w%LabelWidth% y+15, %VariableDescription%:
+      Gui, Settings:Add, Text, +Wrap w%LabelWidth% y+15, %VariableDescription%:
       if (StrLen(VariableValue) >= 10 || StrLen(VariableValue) = 0) {
-        Gui, Add, Edit, w%LabelWidth% vGui%VariableName%Input y+5, %VariableValue%
+        Gui, Settings:Add, Edit, w%LabelWidth% vGui%VariableName%Input y+5, %VariableValue%
       } else {
-        Gui, Add, Edit, w150 vGui%VariableName%Input y+5, %VariableValue%
+        Gui, Settings:Add, Edit, w150 vGui%VariableName%Input y+5, %VariableValue%
       }
     }
 
@@ -305,14 +335,15 @@ class AdminHelperGui
     {
       Loop, Parse, Contents, `n, `r
       {
+        ModuleConfigVariableDescription =
         PluginConfigVariableDescription =
 
         Line := Trim(A_LoopField)
-        PluginConfigVariableLineNumber := A_Index
+        ConfigVariableLineNumber := A_Index
 
         if (StrLen(Line) && SubStr(Line, 1, 1) <> ";") {
           if (SubStr(Line, 1, StrLen("AdminLVL")) = "AdminLVL") {
-            this.adminLVL.Line := PluginConfigVariableLineNumber
+            this.adminLVL.Line := ConfigVariableLineNumber
 
             if (InStr(Line, ";")) {
               this.adminLVL.Description := SubStr(Line, InStr(Line, ";") + 1)
@@ -340,46 +371,51 @@ class AdminHelperGui
             Continue
           }
 
-          if (SubStr(Line, 1, StrLen("IgnoreList")) = "IgnoreList") {
-            IgnoreListValue =
+          For ModuleName, ModuleData in this.modulesList {
+            if (SubStr(Line, 1, StrLen(ModuleName)) = ModuleName) {
+              ModuleConfigLine := Line
+              if (InStr(ModuleConfigLine, ";")) {
+                ModuleConfigVariableDescription := SubStr(ModuleConfigLine, InStr(ModuleConfigLine, ";") + 1)
+                ModuleConfigVariableDescription := Trim(ModuleConfigVariableDescription)
+                if (SubStr(ModuleConfigVariableDescription, 1, 1) = ";") {
+                  ModuleConfigVariableDescription := Trim(SubStr(ModuleConfigVariableDescription, 2))
+                }
 
-
-            this.ignoreList.Items := []
-
-            this.ignoreList.Line := PluginConfigVariableLineNumber
-
-            if (InStr(Line, ";")) {
-              this.ignoreList.Description := SubStr(Line, InStr(Line, ";") + 1)
-              this.ignoreList.Description := Trim(this.ignoreList.Description)
-              if (SubStr(this.ignoreList.Description, 1, 1) = ";") {
-                this.ignoreList.Description := Trim(SubStr(this.ignoreList.Description, 2))
+                ModuleConfigLine := SubStr(ModuleConfigLine, 1, InStr(ModuleConfigLine, ";") - 1)
+                ModuleConfigLine := Trim(ModuleConfigLine)
               }
 
-              Line := SubStr(Line, 1, InStr(Line, ";") - 1)
-              Line := Trim(Line)
-            }
-
-            if (InStr(Line, ":=")) {
-              IgnoreListValue := SubStr(Line, InStr(Line, ":=") + StrLen(":="))
-              IgnoreListValue := Trim(IgnoreListValue)
-              if (SubStr(IgnoreListValue, 1, 1) = Trim(" """" ")) {
-                IgnoreListValue := SubStr(IgnoreListValue, 2, -1)
-                IgnoreListValue := Trim(IgnoreListValue)
+              if (!this.modulesConfigsList[ModuleName]) {
+                this.modulesConfigsList[ModuleName] := {}
               }
-            } else if (InStr(Line, "=")) {
-              IgnoreListValue := SubStr(Line, InStr(Line, "=") + StrLen("="))
-              IgnoreListValue := Trim(IgnoreListValue)
-            }
 
-            if (StrLen(IgnoreListValue)) {
-              Loop, Parse, IgnoreListValue, `,
-              {
-                IgnoreListItem := RegExReplace(A_LoopField, "[^a-zA-Z0-9\_]", "")
-                this.ignoreList.Items.Insert(IgnoreListItem)
+              ModuleConfigVariableName =
+
+              if (InStr(ModuleConfigLine, ":=")) {
+                ModuleConfigVariableName := SubStr(ModuleConfigLine, 1, InStr(ModuleConfigLine, ":=") - 1)
+                ModuleConfigVariableName := Trim(ModuleConfigVariableName)
+                ModuleConfigVariableValue := SubStr(ModuleConfigLine, InStr(ModuleConfigLine, ":=") + StrLen(":="))
+                ModuleConfigVariableValue := Trim(ModuleConfigVariableValue)
+                if (SubStr(ModuleConfigVariableValue, 1, 1) = Trim(" """" ")) {
+                  ModuleConfigVariableValue := SubStr(ModuleConfigVariableValue, 2, -1)
+                  ModuleConfigVariableValue := Trim(ModuleConfigVariableValue)
+                }
+              } else if (InStr(ModuleConfigLine, "=")) {
+                ModuleConfigVariableName := SubStr(ModuleConfigLine, 1, InStr(ModuleConfigLine, "=") - 1)
+                ModuleConfigVariableName := Trim(ModuleConfigVariableName)
+                ModuleConfigVariableValue := SubStr(ModuleConfigLine, InStr(ModuleConfigLine, "=") + StrLen("="))
+                ModuleConfigVariableValue := Trim(ModuleConfigVariableValue)
+              }
+
+              if (StrLen(ModuleConfigVariableName)) {
+                this.modulesConfigsList[ModuleName][ModuleConfigVariableName] := {}
+                this.modulesConfigsList[ModuleName][ModuleConfigVariableName].Line := ConfigVariableLineNumber
+                this.modulesConfigsList[ModuleName][ModuleConfigVariableName].Value := ModuleConfigVariableValue
+                this.modulesConfigsList[ModuleName][ModuleConfigVariableName].Description := ModuleConfigVariableDescription
+
+                Break
               }
             }
-
-            Continue
           }
 
           For PluginName, PluginData in this.pluginsList {
@@ -420,7 +456,7 @@ class AdminHelperGui
 
               if (StrLen(PluginConfigVariableName)) {
                 this.pluginsConfigsList[PluginName][PluginConfigVariableName] := {}
-                this.pluginsConfigsList[PluginName][PluginConfigVariableName].Line := PluginConfigVariableLineNumber
+                this.pluginsConfigsList[PluginName][PluginConfigVariableName].Line := ConfigVariableLineNumber
                 this.pluginsConfigsList[PluginName][PluginConfigVariableName].Value := PluginConfigVariableValue
                 this.pluginsConfigsList[PluginName][PluginConfigVariableName].Description := PluginConfigVariableDescription
 
@@ -435,56 +471,51 @@ class AdminHelperGui
     Return
   }
 
-  tabPluginsListGenerator(TabString)
+  tabListGenerator(TabString)
   {
     this.configReader()
 
-    For PluginName, pluginVariable in this.pluginsConfigsList {
+    For ModuleName, ModuleVariable in this.modulesConfigsList {
+      TabString := TabString "|" ModuleName
+    }
+
+    For PluginName, PluginVariable in this.pluginsConfigsList {
       TabString := TabString "|" PluginName
     }
 
     Return TabString
   }
 
-  ignoreListGeneration()
-  {
-    Global
-
-    Local TabWidth := this.windowWidth - 20
-    Local LabelWidth := TabWidth - 35
-
-    Gui, Tab, 3
-
-    Local IgnoreListDescription := this.ignoreList.Description
-    Local IgnoreListString := this.__stringJoin(this.ignoreList.Items, "`n")
-    this.ignoreList.String := IgnoreListString
-    Local IgnoreListWidth := this.windowWidth - 45
-    Local IgnoreListRowsCount := (this.windowHeight - 100) / 14
-    Gui, Add, Text, +Wrap w%LabelWidth% y+15, %IgnoreListDescription%:
-    Gui, Add, Edit, r%IgnoreListRowsCount% w%IgnoreListWidth% y+15 vGuiIgnoreListInput, %IgnoreListString%
-
-    Return
-  }
-
   userBindsGeneration()
   {
     Global
 
-    Gui, Tab, 2
+    Gui, Settings:Tab, 2
 
     Local UserBindsWidth := this.windowWidth - 45
     Local UserBindsRowsCount := (this.windowHeight - 60) / 14
     Local FileContents
     FileRead, FileContents, %A_ScriptDir%\UserBinds.ahk
-    Gui, Add, Edit, r%UserBindsRowsCount% w%UserBindsWidth% vGuiUserBindsInput, %FileContents%
+    Gui, Settings:Add, Edit, r%UserBindsRowsCount% w%UserBindsWidth% vGuiUserBindsInput, %FileContents%
 
-    Gui, Tab
+    Gui, Settings:Tab
 
     Return
   }
 
   dataUpdate()
   {
+    For ModuleName, ModuleVariableObject in this.modulesConfigsList {
+      For VariableName, VariableData in ModuleVariableObject {
+        if (SubStr(VariableName, -3) <> "File") {
+          VariableInputName = Gui%VariableName%Input
+          GuiControlGet, %VariableInputName%
+          VariableInputValue := %VariableInputName%
+          this.modulesConfigsList[ModuleName][VariableName].Value := VariableInputValue
+        }
+      }
+    }
+
     For PluginName, PluginVariableObject in this.pluginsList {
       GuiControlGet, GuiPlugin%PluginName%Status
 
@@ -504,9 +535,6 @@ class AdminHelperGui
 
     GuiControlGet, GuiAdminLVLInput
     this.adminLVL.Value := GuiAdminLVLInput
-
-    GuiControlGet, GuiIgnoreListInput
-    this.ignoreList.String := GuiIgnoreListInput
 
     this.modulesStatusesUpdate()
 
@@ -549,11 +577,13 @@ class AdminHelperGui
   pluginsStatusesSave()
   {
     LinesList := {}
+
     For ModuleName, ModuleData in this.modulesList {
       For ModulePathLine, ModulePath in ModuleData["Paths"] {
         LinesList[ModulePathLine] := (this.modulesListRequired[ModuleName] ? "True" : "False")
       }
     }
+
     For PluginName, PluginData in this.pluginsList {
       For PluginPathLine, PluginPath in PluginData["Paths"] {
         LinesList[PluginPathLine] := (PluginData["Status"] ? "True" : "False")
@@ -596,6 +626,15 @@ class AdminHelperGui
   configSave()
   {
     ConfigLinesList := {}
+
+    For ModuleName, VariablesData in this.modulesConfigsList {
+      For VariableName, VariableData in VariablesData {
+        ConfigLinesList[VariableData.Line] := {}
+        ConfigLinesList[VariableData.Line].Name := VariableName
+        ConfigLinesList[VariableData.Line].Value := VariableData.Value
+      }
+    }
+
     For PluginName, VariablesData in this.pluginsConfigsList {
       For VariableName, VariableData in VariablesData {
         ConfigLinesList[VariableData.Line] := {}
@@ -608,33 +647,6 @@ class AdminHelperGui
       ConfigLinesList[this.adminLVL.Line] := {}
       ConfigLinesList[this.adminLVL.Line].Name := "AdminLVL"
       ConfigLinesList[this.adminLVL.Line].Value := this.adminLVL.Value
-    }
-
-    if (this.ignoreList.Line) {
-      IgnoreListString := "`["""
-      IgnoreListArray := StrSplit(this.ignoreList.String, "`n")
-      IgnoreListCleanArray := []
-      For IgnoreListKey, IgnoreListItem in IgnoreListArray {
-        if (!this.__hasValueInArray(IgnoreListCleanArray, IgnoreListItem)) {
-          If (IgnoreListKey > 1) {
-            IgnoreListString := IgnoreListString Trim(" ""`, "" ")
-          }
-          IgnoreListString := IgnoreListString IgnoreListItem
-          IgnoreListCleanArray.Insert(IgnoreListItem)
-        }
-      }
-      IgnoreListString := IgnoreListString Trim(" ""] ")
-      this.ignoreList.Value := IgnoreListString
-
-      this.ignoreList.Items := IgnoreListCleanArray
-      IgnoreListString := this.__stringJoin(IgnoreListCleanArray, "`n")
-      this.ignoreList.String := IgnoreListString
-
-      GuiControl,, GuiIgnoreListInput, %IgnoreListString%
-
-      ConfigLinesList[this.ignoreList.Line] := {}
-      ConfigLinesList[this.ignoreList.Line].Name := "IgnoreList"
-      ConfigLinesList[this.ignoreList.Line].Value := this.ignoreList.Value
     }
 
     FileDelete, Config.ahk.tmp
@@ -714,7 +726,7 @@ class AdminHelperGui
 
   guiClose()
   {
-    Gui, Destroy
+    Gui, Settings:Destroy
 
     Return
   }
@@ -733,7 +745,7 @@ class AdminHelperGui
 
   done()
   {
-    Gui, Submit, NoHide
+    Gui, Settings:Submit, NoHide
 
     this.dataUpdate()
 
@@ -745,18 +757,18 @@ class AdminHelperGui
 
 AdminHelperGui := new AdminHelperGui()
 
-AdminHelperGui.trayMenuGeneration()
-
 if (%0%) {
   AdminHelperGui.open()
   MsgBox, Введённые данные сохранены успешно.`nНовые параметры уже применены.
 } else if (A_ScriptName <> "AdminHelper.ahk") {
   AdminHelperGui.open()
+} else {
+  AdminHelperGui.trayMenuGeneration()
 }
 
 Return
 
-GuiOpen:
+SettingsGuiOpen:
 {
   AdminHelperGui.open()
 
@@ -771,12 +783,12 @@ GuiSave:
 }
 
 ButtonCancel:
-GuiClose:
+SettingsGuiClose:
 {
-  AdminHelperGui.guiClose()
-  
   if (A_ScriptName <> "AdminHelper.ahk") {
     ExitApp
+  } else {
+    AdminHelperGui.guiClose()
   }
 
   Return

@@ -103,7 +103,7 @@ class TP
               addMessageToChatWindow("{00D900} Добавлен игрок " PlayerNick "[" Id "].")
             }
           } else {
-            addMessageToChatWindow("{FF0000} Игрок с ID " Id " не найден в игре.")
+            addMessageToChatWindow("{FF0000} Игрок с ID " Id " не найден в игре. Откройте и закройте Tab, после чего попробуйте повторить попытку.")
           }
         }
       }

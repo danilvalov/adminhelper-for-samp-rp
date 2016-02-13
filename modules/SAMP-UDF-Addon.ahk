@@ -4,22 +4,112 @@ global ADDR_SET_POSITION_X_OFFSET := 0x30
 global ADDR_SET_POSITION_Y_OFFSET := 0x34
 global ADDR_SET_POSITION_Z_OFFSET := 0x38
 global ADDR_SET_INTERIOR_OFFSET := 0xB72914
+global SAMP_SZIP_OFFSET := 0x20
+global SAMP_SZHOSTNAME_OFFSET := 0x121
 global SAMP_INFO_SETTINGS_OFFSET := 0x3C5
+
+; returns server ip or empty string on error
+getIP() {
+    if(!checkHandles())
+        return ""
+
+    dwAddress := readDWORD(hGTA, dwSAMP + SAMP_INFO_OFFSET)
+    if(ErrorLevel || dwAddress==0) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return ""
+    }
+
+    ipAddr := readString(hGTA, dwAddress + SAMP_SZIP_OFFSET, 257)
+    if(ErrorLevel) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return ""
+    }
+
+    return ipAddr
+}
+
+; change server ip
+setIP(IP) {
+    if(!checkHandles())
+        return False
+
+    dwAddress := readDWORD(hGTA, dwSAMP + SAMP_INFO_OFFSET)
+    if(ErrorLevel || dwAddress==0) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return False
+    }
+
+    writeString(hGTA, dwAddress + SAMP_SZIP_OFFSET, IP)
+    if(ErrorLevel) {
+        ErrorLevel := ERROR_WRITE_MEMORY
+        return False
+    }
+
+    return True
+}
+
+; returns server hostname or empty string on error
+getHostname() {
+    if(!checkHandles())
+        return ""
+
+    dwAddress := readDWORD(hGTA, dwSAMP + SAMP_INFO_OFFSET)
+    if(ErrorLevel || dwAddress==0) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return ""
+    }
+
+    hostname := readString(hGTA, dwAddress + SAMP_SZHOSTNAME_OFFSET, 259)
+    if(ErrorLevel) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return ""
+    }
+
+    return hostname
+}
+
+; set nickname
+setUsername(Username) {
+    if(!checkHandles())
+        return False
+
+    dwAddress := dwSAMP + ADDR_SAMP_USERNAME
+    writeString(hGTA, dwAddress, Username)
+    if(ErrorLevel) {
+        ErrorLevel := ERROR_WRITE_MEMORY
+        return False
+    }
+
+    ErrorLevel := ERROR_OK
+    return True
+}
+
+
+connect(IP) {
+  setIP(IP)
+
+  restartGameEx()
+  disconnectEx()
+  Sleep 1000
+  setrestart()
+
+  Return
+}
 
 setCoordinates(x, y, z, Interior) {
     if(!checkHandles())
-        return ""
+        return False
 
     dwAddress := readMem(hGTA, ADDR_SET_POSITION)
     if(ErrorLevel) {
         ErrorLevel := ERROR_READ_MEMORY
-        Return ""
+        Return False
     }
 
     dwAddress := readMem(hGTA, dwAddress + ADDR_SET_POSITION_OFFSET)
     if(ErrorLevel) {
         ErrorLevel := ERROR_READ_MEMORY
-        Return ""
+        Return False
     }
 
     Sleep 100
@@ -27,25 +117,25 @@ setCoordinates(x, y, z, Interior) {
     writeByte(hGTA, ADDR_SET_INTERIOR_OFFSET, Interior)
     if(ErrorLevel) {
         ErrorLevel := ERROR_WRITE_MEMORY
-        Return ""
+        Return False
     }
 
     writeFloat(hGTA, dwAddress + ADDR_SET_POSITION_X_OFFSET, x)
     if(ErrorLevel) {
         ErrorLevel := ERROR_WRITE_MEMORY
-        Return ""
+        Return False
     }
 
     writeFloat(hGTA, dwAddress + ADDR_SET_POSITION_Y_OFFSET, y)
     if(ErrorLevel) {
         ErrorLevel := ERROR_WRITE_MEMORY
-        Return ""
+        Return False
     }
 
     writeFloat(hGTA, dwAddress + ADDR_SET_POSITION_Z_OFFSET, z)
     if(ErrorLevel) {
         ErrorLevel := ERROR_WRITE_MEMORY
-        Return ""
+        Return False
     }
 
     Return True
@@ -91,12 +181,12 @@ setChatLine(line, msg) {
 	; 99, max msg
 	writeString(hGTA, dwAddress + 0x152 + ( (99-line) * 0xFC), msg)
 	if(ErrorLevel) {
-		ErrorLevel := ERROR_READ_MEMORY
+		ErrorLevel := ERROR_WRITE_MEMORY
 		return -1
   }
 
 	ErrorLevel := ERROR_OK
-	return
+	return True
 }
 
 getTagNameDistance() {
@@ -163,6 +253,182 @@ setTagNameDistance(status, distance) {
 
 	ErrorLevel := ERROR_OK
 	return
+}
+
+; sets the ingame hour (day/night)
+; @author luxdav aka David_Luchs
+; @param hour the time between 0 and 23
+setTime(hour)
+{
+	if(!checkHandles())
+		return
+	; disable gta setTime function
+	VarSetCapacity(nop, 6, 0)
+	Loop 6 {
+		NumPut(0x90, nop, A_INDEX-1, "UChar")
+	}
+	writeRaw(hGTA, 0x52D168, &nop, 6)
+
+	; set our own weather
+	VarSetCapacity(time, 1, 0)
+	NumPut(hour, time, 0, "Int")
+	writeRaw(hGTA, 0xB70153, &time, 1)
+}
+
+; sets the weather
+; @author luxdav aka David_Luchs
+; @param weather id
+; check http://www.gtamodding.com/index.php?title=Memory_Addresses_%28SA%29 for weather codes
+setWeather(id)
+{
+	if(!checkHandles())
+		return
+	VarSetCapacity(weather, 1, 0)
+	NumPut(id, weather, 0, "Int")
+	writeRaw(hGTA, 0xC81320, &weather, 1)
+	if(ErrorLevel)
+		return false
+
+
+	return true
+}
+
+; get the id of your skin
+; @author luxdav aka David_Luchs
+getSkinID() {
+	if(!checkHandles())
+		return -1
+
+	dwAddress := readDWORD(hGTA, 0xB6F3B8)
+
+	if(ErrorLevel || dwAddress==0) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return -1
+	}
+
+	id := readMem(hGTA, dwAddress + 0x22, 2, "UShort")
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return -1
+	}
+	ErrorLevel := ERROR_OK
+	return id
+}
+
+; get the text in dialog
+; @author luxdav aka David_Luchs
+getDialogText()
+{
+	if(!checkHandles())
+		return ""
+	dwAddress := readDWORD(hGTA, dwSAMP + 0x21A0FC)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+	dwAddress := readDWORD(hGTA, dwAddress + 0x1C)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+	text := readString(hGTA, dwAddress, 4096)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+
+	ErrorLevel := ERROR_OK
+	return text
+}
+
+; get the title of dialog
+; @author luxdav aka David_Luchs
+getDialogTitle()
+{
+	if(!checkHandles())
+		return ""
+	dwAddress := readDWORD(hGTA, dwSAMP + 0x21A0B8)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+	text := readString(hGTA, dwAddress + 0x40, 128)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+
+	ErrorLevel := ERROR_OK
+	return text
+}
+
+; get the color of player
+; @author democrazy
+getPlayerColor(id)
+{
+    id += 0
+
+    if(!checkHandles())
+        return -1
+
+    color := readDWORD(hGTA, dwSAMP + 0x216378 + 4*id)
+    if(ErrorLevel) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return -1
+    }
+    return color
+}
+
+; set the color of player
+; @author democrazy
+setPlayerColor(id,color)
+{
+    id += 0
+    color +=0
+
+    if(!checkHandles())
+        return
+
+    VarSetCapacity(bla, 4, 0)
+    NumPut(color,bla,0,"UInt")
+
+    writeRaw(hGTA, dwSAMP + 0x216378 + 4*id, &bla, 4)
+}
+
+; convert color from decimal into hex
+; @author democrazy
+colorToStr(color)
+{
+    color += 0
+    color >>= 8
+    color &= 0xffffff
+    SetFormat, IntegerFast, hex
+    color += 0
+    color .= ""
+    StringTrimLeft, color, color, 2
+    SetFormat, IntegerFast, d
+    return "{" color "}"
+}
+
+; get current weapon id
+; @author AnalFatal
+getWeaponId()
+{
+    If(!checkHandles())
+    return 0
+
+   c := readDWORD(hGTA, ADDR_CPED_PTR)
+   If(ErrorLevel) {
+   		ErrorLevel := ERROR_READ_MEMORY
+   		return 0
+   }
+   id := readMem(hGTA, c + 0x740)
+   If(ErrorLevel) {
+   		ErrorLevel := ERROR_READ_MEMORY
+   		return 0
+   }
+
+   return id
 }
 
 writeFloat(hProcess, dwAddress, wFloat) {

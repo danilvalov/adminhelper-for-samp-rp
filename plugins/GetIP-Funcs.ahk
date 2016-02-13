@@ -205,6 +205,58 @@ class GetIP
     Return
   }
 
+  aStats(Data)
+  {
+    User := RegExReplace(Data[2], "[^a-zA-Z0-9\_]", "")
+
+    if (StrLen(User) && User = Data[2]) {
+      UserId := RegExReplace(Data[2], "[^0-9]", "")
+
+      if (StrLen(UserId) && UserId = User) {
+        hardUpdateOScoreboardData()
+
+        Sleep 1000
+
+        User := getPlayerNameById(UserId)
+
+        if (User && StrLen(User)) {
+          sendChatMessage("/agetstats " User)
+        } else {
+          addMessageToChatWindow("{FF0000} Игрок с ID " UserId " не найден в игре. Откройте и закройте Tab, после чего попробуйте повторить попытку.")
+        }
+      } else {
+        sendChatMessage("/agetstats " User)
+      }
+    } else {
+      addMessageToChatWindow("{FFFF00} Правильный формат ввода: {FFFFFF}/astats [id_игрока]")
+    }
+
+    Return
+  }
+
+  allStats(Data)
+  {
+    User := RegExReplace(Data[2], "[^a-zA-Z0-9\_]", "")
+
+    if (StrLen(User) && User = Data[2]) {
+      UserId := RegExReplace(Data[2], "[^0-9]", "")
+
+      this.getOnlyForMe(Data)
+
+      Sleep 1200
+
+      sendChatMessage("/pgetip 4 " this.LastGetIP)
+
+      Sleep 1200
+
+      sendChatMessage("/agetstats " this.GetIPUser)
+    } else {
+      addMessageToChatWindow("{FFFF00} Правильный формат ввода: {FFFFFF}/allstats [id_игрока] {FFFF00}или {FFFFFF}/allstats [ник_игрока]")
+    }
+
+    Return
+  }
+
   setNik()
   {
     Chatlog.reader()
@@ -333,6 +385,8 @@ Chatlog.checker.Insert("GetIPSetNikChatlogChecker")
 
 CMD.commands["tgetip"] := "GetIP.twinks"
 CMD.commands["geoip"] := "GetIP.getOnlyForMe"
+CMD.commands["astats"] := "GetIP.aStats"
+CMD.commands["allstats"] := "GetIP.allStats"
 
 Hotkey, %GetIPKey%, GetIPHotKey
 

@@ -15,7 +15,7 @@ class BanIP
   {
     NickName := RegExReplace(Data[2], "[^a-zA-Z0-9\_]", "")
 
-    if (StrLen(NickName) < 3) {
+    if (StrLen(NickName) < 3 || StrLen(NickName) > 20) {
       addMessageToChatWindow("{FF0000} Неверно введён ник игрока.")
 
       Return False
@@ -51,16 +51,23 @@ class BanIP
 
   hotkey()
   {
-    global AdminLVL, BanIPGetIPUsersBoolean
+    global AdminLVL, BanIPGetIPUsersBoolean, BanIPEnterBoolean
 
     Chatlog.reader()
 
     if (StrLen(this.lastBanIP)) {
-      sendChatSavingMessage("/banip " this.lastBanIP)
+      if (BanIPEnterBoolean) {
+        sendChatSavingMessage("/banip " this.lastBanIP)
+
+        Sleep 1200
+      }
 
       if (AdminLVL >= 4 && BanIPGetIPUsersBoolean) {
-        Sleep 1200
         sendChatSavingMessage("/pgetip 4 " this.lastBanIP)
+      }
+
+      if (!BanIPEnterBoolean) {
+        sendChatSavingMessage("/banip " this.lastBanIP, False)
       }
     } else {
       sendChatSavingMessage("/banip", False)

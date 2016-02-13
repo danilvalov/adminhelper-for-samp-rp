@@ -10,6 +10,12 @@ AdminLVL = 5                                     ; LVL Администратора (все функц
 
 ;;   1 lvl
 
+; Connect
+
+ConnectServersFile = ServersList.ini                ; Файл списка серверов для подключения
+
+
+; LastSMS
 ; Ответ на последнее SMS
 ; (в строку ввода сообщения будет вставлено: "/t [id_игрока_в_последнем_смс] ")
 
@@ -19,6 +25,7 @@ LastSMSOnlyReceivedBoolean = 0                   ; 1 - Учитывать только полученн
 				                                         ; 0 - Учитывать и полученные, и отправленные сообщения
 
 
+; LastPM
 ; Ответ на последний репорт
 ; (в строку ввода сообщения будет вставлено: "/pm [id_игрока_в_последнем_репорте] ")
 
@@ -28,6 +35,7 @@ LastPMOnlyReceivedBoolean = 0                    ; 1 - Учитывать только полученн
 				                                         ; 0 - учитывать и полученные репорты, и отправленные ответы
 
 
+; PMToLastMuteOrDM
 ; Ответ последнему игроку, которому вы выдали бан чата или посадили в ДеМорган
 ; (в строку ввода сообщения будет вставлено: "pm [id_последнего_наказанного_игрока] ")
 
@@ -86,7 +94,7 @@ ReconViewerStopKey = !vk4B                       ; Клавиша остановки цикла (по-у
 
 ; Ignore List
 
-IgnoreList := ["Flazy_Fad", "Donny_Hayes", "Yann_Dobermann", "El_Capone", "Jame_Smith", "Vito_Anjello", "Dale_Farrell", "Alex_Nilsson", "Denis_Fat", "Kamil_Boyka", "Vyacheslav_Ivankov", "Aleksey_Nechaev", "Alex_Merphy", "Aleksandro_Balotelli", "Vitaliy_Leonov", "Anton_Xabibullin", "John_Toronto", "Gabriele_Soto", "Richard_Alpert", "Theodore_Long", "Maga_Bagamaev", "Aidar_Valeyev", "Alessandro_Armani", "Maks_Kruger", "Alex_Deniro", "Lexa_Diablo", "Nikita_Gryadunov", "Emmett_Hartley", "Mario_Brossi", "Filipp_Savchuk", "Serega_Sed", "Fernando_Freeman", "Butter_Fly", "Benjamin_Stone", "Alek_Lester", "Chilly_Villi", "Zhenya_Bocharov", "Vladimir_Bondarenko", "Evgen_Kozlov", "Zhan_Dicaprio", "Lee_Brooks", "Max_Hall", "Maks_River", "Maks_Sergeev", "Brian_Davis", "Marco_Barrosi", "Anton_Shkvarov", "Yoda_Sensei", "Antonio_Mariarti", "Ruslan_Vlasov", "Thomas_Versetti", "Roma_Mexanik", "Vovich_Robin", "Leonid_Litvinenko", "Artem_Keepers", "Erick_Miller", "Dima_Horow", "Jonathan_Armstrong", "Igor_Doyal", "Phil_Galfond", "Christopher_Benitez", "Fill_Russel", "Roman_Hennesy", "Fedor_Manyc", "Johny_Fletcher", "Pavel_Snow", "Danya_Fox", "Christopher_Bell", "Pavel_Pustyakov", "Alexander_Briliante", "Richard_Gun", "Vlados_Step", "Dave_Parker", "Arian_Cross", "Mark_Laev", "Igor_Green", "Calvin_Anthony", "Antonio_Barbaro", "Mark_Hoffman", "Alexey_Mikenin", "Santiago_Talerte", "Slevin_Kelevra", "Roman_Hadson", "Ben_Grous", "Alfa_Rhino", "Chris_Ramsey", "Samuel_Duarte", "Riccardo_Jerome", "Evgenie_Gluhov", "Alexandr_Sab", "Vadim_Gromov", "Yuriy_Baranov", "Jeffrey_Bradberry", "Aiden_Gastly", "Yurij_Taran", "Danil_Valov", "Enrique_Houston", "Vladislav_Rudenko", "John_Markoff", "Frank_Lampard", "Viktor_Monetti", "Viktor_Myrazor", "Vadima_Norman", "Larvell_Jones", "Timon_Soto", "Maks_Collins", "Mike_Rockstar", "Denis_Ochida", "Dmitry_Norton", "Francesco_Valetti", "Clyde_Pringles", "Frank_Blubery", "Groin_Axe", "Mike_Lowrens", "Vlad_Biernatskii", "Link_Tao", "Fernando_Richardson", "Filipp_Kane", "Dave_Smit", "Alexis_Ronka", "Arthur_Simpson", "Tony_Tweaker", "Tobey_Marshall", "Marat_Rezapov", "Shane_Nollan", "Jordan_West", "Norman_Osborn", "Terry_Jones", "Chris_Milton", "Alex_Benelli", "Dany_Morgan", "Djon_Smith", "Karlo_Bruno", "Mark_Cole", "Denis_Volochay", "David_Cameron", "Viktor_Scott", "Apple_Purix", "Nik_Mariarti", "Tony_Malton", "Derrick_Hoover", "Archie_White", "Zadrot_Info"] ; Список пользователей, которых будут пропускать в списке телепортации, списке изъятия оружия и т.п.
+IgnoreListFile = IgnoreList.ini                 ; Файл списка пользователей, которых будут пропускать в списке телепортации, списке изъятия оружия и т.п.
 
 
 ;;   3 lvl
@@ -98,6 +106,8 @@ BanIPKey = !Numpad9                              ; Клавиша бана по IP последнего
 BanIPGetIPUsersBoolean = 1                       ; 1 - Получать список пользователей онлайн с этим же IP после нажатия кнопки бана по IP
                                                  ; 0 - Не получать список пользователей онлайн
 
+BanIPEnterBoolean = 1                            ; 1 - Банить игрока сразу по нажатию на сочетание клавиш (автоматически нажимать Enter)
+                                                 ; 0 - Выводить в чат только `/ban [ip]` (не нажимать Enter автоматически)
 
 ;;   4 lvl
 
@@ -112,9 +122,9 @@ GetIPSetNikKey = +!vk6F                          ; Клавиша получения местоположе
 
 ; Uninvites
 
-UninvitesListFile = UninvitesList.ini                ; Файл со списком игроков для увольнения в Offline командой `/listuninvites`
+UninvitesListFile = UninvitesList.ini            ; Файл со списком игроков для увольнения в Offline командой `/listuninvites`
 
 
-;Hbj
+; Hbj
 
-HbjListFile = HbjectsList.ini                        ; Файл со списком объектов, надеваемых на игроков командой `/hbj [id] [название_объекта]`
+HbjListFile = HbjectsList.ini                    ; Файл со списком объектов, надеваемых на игроков командой `/hbj [id] [название_объекта]`

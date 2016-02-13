@@ -43,6 +43,8 @@ SetWorkingDir %A_ScriptDir%
 ; Plugins Funcs
 
 #include plugins\LastSMS-Funcs.ahk
+#include plugins\Connect-Funcs.ahk
+;#include plugins\AutoConnect-Funcs.ahk
 
 ;;   1 lvl
 if (AdminLVL >= 1) {
@@ -103,6 +105,7 @@ Return
 ; Plugins Labels
 
 #include plugins\LastSMS-Labels.ahk
+;#include plugins\AutoConnect-Labels.ahk
 
 ;;   1 lvl
 if (AdminLVL >= 1) {
