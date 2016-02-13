@@ -249,7 +249,11 @@ class GetIP
 
       Sleep 1200
 
-      sendChatMessage("/agetstats " this.GetIPUser)
+      if (StrLen(UserId) && UserId = User) {
+        sendChatMessage("/agetstats " getPlayerNameById(UserId))
+      } else {
+        sendChatMessage("/agetstats " User)
+      }
     } else {
       addMessageToChatWindow("{FFFF00} Правильный формат ввода: {FFFFFF}/allstats [id_игрока] {FFFF00}или {FFFFFF}/allstats [ник_игрока]")
     }
