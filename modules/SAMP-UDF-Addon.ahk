@@ -315,32 +315,6 @@ getSkinID() {
 	return id
 }
 
-; get the text in dialog
-; @author luxdav aka David_Luchs
-getDialogText()
-{
-	if(!checkHandles())
-		return ""
-	dwAddress := readDWORD(hGTA, dwSAMP + 0x21A0FC)
-	if(ErrorLevel) {
-		ErrorLevel := ERROR_READ_MEMORY
-		return ""
-	}
-	dwAddress := readDWORD(hGTA, dwAddress + 0x1C)
-	if(ErrorLevel) {
-		ErrorLevel := ERROR_READ_MEMORY
-		return ""
-	}
-	text := readString(hGTA, dwAddress, 4096)
-	if(ErrorLevel) {
-		ErrorLevel := ERROR_READ_MEMORY
-		return ""
-	}
-
-	ErrorLevel := ERROR_OK
-	return text
-}
-
 ; get the title of dialog
 ; @author luxdav aka David_Luchs
 getDialogTitle()
@@ -353,6 +327,32 @@ getDialogTitle()
 		return ""
 	}
 	text := readString(hGTA, dwAddress + 0x40, 128)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+
+	ErrorLevel := ERROR_OK
+	return text
+}
+
+; get the text in dialog
+; @author Danil_Valov
+getDialogText()
+{
+	if(!checkHandles())
+		return ""
+	dwAddress := readDWORD(hGTA, dwSAMP + 0x21A0B8)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+	dwAddress := readDWORD(hGTA, dwAddress + 0x34)
+	if(ErrorLevel) {
+		ErrorLevel := ERROR_READ_MEMORY
+		return ""
+	}
+	text := readString(hGTA, dwAddress, 4096)
 	if(ErrorLevel) {
 		ErrorLevel := ERROR_READ_MEMORY
 		return ""
@@ -429,6 +429,84 @@ getWeaponId()
    }
 
    return id
+}
+
+; set checkpoint on map
+; @author democrazy
+setCheckpoint(fX, fY, fZ, fSize ) {
+    if(!checkHandles())
+        return false
+    dwFunc := dwSAMP + 0x9D340
+
+    dwAddress := readDWORD(hGTA, dwSAMP + ADDR_SAMP_INCHAT_PTR) ;misc info
+    if(ErrorLevel || dwAddress==0) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return false
+    }
+
+    VarSetCapacity(buf, 16, 0)
+    NumPut(fX, buf, 0, "Float")
+    NumPut(fY, buf, 4, "Float")
+    NumPut(fZ, buf, 8, "Float")
+    NumPut(fSize, buf, 12, "Float")
+
+    writeRaw(hGTA, pParam1, &buf, 16)
+
+    dwLen := 31
+
+
+    VarSetCapacity(injectData, dwLen, 0)
+
+    NumPut(0xB9, injectData, 0, "UChar")
+    NumPut(dwAddress, injectData, 1, "UInt")
+    NumPut(0x68, injectData, 5, "UChar")
+    NumPut(pParam1+12, injectData, 6, "UInt")
+    NumPut(0x68, injectData, 10, "UChar")
+    NumPut(pParam1, injectData, 11, "UInt")
+    NumPut(0xE8, injectData, 15, "UChar")
+    offset := dwFunc - (pInjectFunc + 20)
+    NumPut(offset, injectData, 16, "Int")
+    NumPut(0x05C7, injectData, 20, "UShort")
+    NumPut(dwAddress+0x24, injectData, 22, "UInt")
+    NumPut(1, injectData, 26, "UInt")
+    NumPut(0xC3, injectData, 30, "UChar")
+
+
+    writeRaw(hGTA, pInjectFunc, &injectData, dwLen)
+    if(ErrorLevel)
+        return false
+
+    hThread := createRemoteThread(hGTA, 0, 0, pInjectFunc, 0, 0, 0)
+    if(ErrorLevel)
+        return false
+
+    waitForSingleObject(hThread, 0xFFFFFFFF)
+
+    closeProcess(hThread)
+
+    ErrorLevel := ERROR_OK
+    return true
+}
+
+; disable checkpoint from map
+; @author democrazy
+disableCheckpoint()
+{
+    if(!checkHandles())
+        return false
+
+    dwAddress := readDWORD(hGTA, dwSAMP + ADDR_SAMP_INCHAT_PTR) ;misc info
+    if(ErrorLevel || dwAddress==0) {
+        ErrorLevel := ERROR_READ_MEMORY
+        return false
+    }
+
+    VarSetCapacity(enablecp, 4, 0)
+    NumPut(0,enablecp,0,"Int")
+    writeRaw(hGTA, dwAddress+0x24, &enablecp, 4)
+
+    ErrorLevel := ERROR_OK
+    return true
 }
 
 writeFloat(hProcess, dwAddress, wFloat) {

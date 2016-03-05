@@ -2,7 +2,7 @@
 ;; ReconLastWarning Plugin for AdminHelper.ahk
 ;; Description: Плагин добавляет возможность быстро подключаться к ID, указанному в последнем Warning'е
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b (Apr 04, 2015)
+;; Version: 1.0b11 (Mar 06, 2015)
 ;; Required modules: SAMP-UDF-Ex, SendChatSavingMessage, Chatlog
 ;;
 

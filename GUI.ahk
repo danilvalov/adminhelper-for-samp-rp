@@ -757,8 +757,14 @@ class AdminHelperGui
 
 AdminHelperGui := new AdminHelperGui()
 
-if (%0%) {
+CurrentAttribute = %1%
+if (CurrentAttribute = "/saved") {
+  if (A_ScriptName = "AdminHelper.ahk") {
+    AdminHelperGui.trayMenuGeneration()
+  }
+
   AdminHelperGui.open()
+
   MsgBox, Введённые данные сохранены успешно.`nНовые параметры уже применены.
 } else if (A_ScriptName <> "AdminHelper.ahk") {
   AdminHelperGui.open()

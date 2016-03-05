@@ -3,7 +3,7 @@
 ;; Description: Плагин добавляет возможность быстро очищать фракции
 ;; CMD: /uninvites, /offuninvites, /listuninvites
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b8 (Dec 09, 2015)
+;; Version: 1.0b11 (Mar 06, 2015)
 ;; Required modules: SAMP-UDF-Ex, Chatlog, CMD
 ;;
 
@@ -113,7 +113,11 @@ class Uninvites
 
         sendChatMessage("/offmembers " FId)
 
-        Sleep 10000
+        Sleep 5000
+
+        addMessageToChatWindow("{FFFF00}В течение 5-ти секунд запустится цикл увольнения.")
+
+        Sleep 5000
 
         Chatlog.reader()
 
@@ -360,7 +364,7 @@ UninvitesChatlogChecker(ChatlogString)
   }
 
   if (Uninvites.runOffline) {
-    RegExMatch(ChatlogString, "\[([a-zA-Z0-9\_]){3,20}] \[(\d){1,2}] \[(\d){2}/(\d){2}/(\d){4} (\d){2}:(\d){2}] \[(\d){2}/(\d){2}/(\d){4} (\d){2}:(\d){2}]", CheckOffline)
+    RegExMatch(ChatlogString, "\[([a-zA-Z0-9\_]){3,20}] \[(\d){1,2}] \[(\d){4}/(\d){2}/(\d){2} (\d){2}:(\d){2}:(\d){2}] \[(\d){4}/(\d){2}/(\d){2} (\d){2}:(\d){2}:(\d){2}]", CheckOffline)
 
     if (CheckOffline) {
       RegExMatch(ChatlogString, "\[([a-zA-Z0-9\_]){3,20}]", PlayerNick)
@@ -370,7 +374,7 @@ UninvitesChatlogChecker(ChatlogString)
   }
 
   if (Uninvites.runOfflineList) {
-      RegExMatch(ChatlogString, "\[([a-zA-Z0-9\_]){3,20}] \[(\d){1,2}] \[(\d){2}/(\d){2}/(\d){4} (\d){2}:(\d){2}] \[(\d){2}/(\d){2}/(\d){4} (\d){2}:(\d){2}]", CheckOffline)
+      RegExMatch(ChatlogString, "\[([a-zA-Z0-9\_]){3,20}] \[(\d){1,2}] \[(\d){4}/(\d){2}/(\d){2} (\d){2}:(\d){2}:(\d){2}] \[(\d){4}/(\d){2}/(\d){2} (\d){2}:(\d){2}:(\d){2}]", CheckOffline)
 
       if (CheckOffline) {
         RegExMatch(ChatlogString, "\[([a-zA-Z0-9\_]){3,20}]", PlayerNick)

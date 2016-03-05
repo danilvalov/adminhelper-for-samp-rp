@@ -3,7 +3,7 @@
 ;; Description: Плагин добавляет возможность быстро переключаться по игрокам в Recon (предыдущий/следующий игрок)
 ;; CMD: /rerun, /restop, /relvl, /retime
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b3 (Apr 04, 2015)
+;; Version: 1.0b11 (Mar 06, 2015)
 ;; Required modules: SAMP-UDF-Ex, SAMP-UsersListUpdater, CMD
 ;;
 

@@ -2,7 +2,7 @@
 ;; ReconLastPM Plugin for AdminHelper.ahk
 ;; Description: ѕлагин добавл€ет возможность быстро подключатьс€ к ID, указанному в последней жалобе в репорт
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b8 (Jan 19, 2015)
+;; Version: 1.0b11 (Mar 06, 2015)
 ;; Required modules: SAMP-UDF-Ex, SendChatSavingMessage, Chatlog
 ;;
 
@@ -48,4 +48,6 @@ ReconLastPMChatlogChecker(ChatlogString)
 
 Chatlog.checker.Insert("ReconLastPMChatlogChecker")
 
-Hotkey, %ReconLastPMKey%, ReconLastPMHotKey
+if (StrLen(ReconLastPMKey)) {
+  Hotkey, %ReconLastPMKey%, ReconLastPMHotKey
+}

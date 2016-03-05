@@ -2,7 +2,7 @@
 ;; BanIP Plugin for AdminHelper.ahk
 ;; Description: ѕлагин банит по IP последнего забаненного игрока
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b9 (Jan 24, 2015)
+;; Version: 1.0b11 (Mar 06, 2015)
 ;; Required modules: SAMP-UDF-Ex, SendChatSavingMessage, Chatlog
 ;; Required plugins: GetIP
 ;;
@@ -63,7 +63,7 @@ class BanIP
       }
 
       if (AdminLVL >= 4 && BanIPGetIPUsersBoolean) {
-        sendChatSavingMessage("/pgetip 4 " this.lastBanIP)
+        sendChatMessage("/pgetip 4 " this.lastBanIP)
       }
 
       if (!BanIPEnterBoolean) {
@@ -85,7 +85,17 @@ CMD.commands["banipn"] := "BanIP.nick"
 
 BanIPChatlogChecker(ChatlogString)
 {
+  Global BanIPEnterBoolean, BanIPGetIPBoolean
+
   if (SubStr(ChatlogString, 1, 9) = "    Nik [" && InStr(ChatlogString, "R-IP [") && InStr(ChatlogString, "L-IP [")) {
+    RegExMatch(ChatlogString, "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", LastBanIP, -17)
+
+    if (StrLen(LastBanIP)) {
+      BanIP.lastBanIP := LastBanIP
+    }
+  }
+
+  if (!BanIPEnterBoolean && BanIPGetIPBoolean && SubStr(Trim(ChatlogString), 1, 5) = "Nik [" && (InStr(ChatlogString, "R-IP [") || InStr(ChatlogString, "Register-IP [")) && (InStr(ChatlogString, "L-IP [") || InStr(ChatlogString, "Last-IP ["))) {
     RegExMatch(ChatlogString, "(\d){1,3}.(\d){1,3}.(\d){1,3}.(\d){1,3}", LastBanIP, -17)
 
     if (StrLen(LastBanIP)) {
@@ -97,4 +107,6 @@ BanIPChatlogChecker(ChatlogString)
 Chatlog.checker.Insert("BanIPChatlogChecker")
 
 
-Hotkey, %BanIPKey%, BanIPHotKey
+if (StrLen(BanIPKey)) {
+  Hotkey, %BanIPKey%, BanIPHotKey
+}

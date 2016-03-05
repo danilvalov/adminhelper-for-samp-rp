@@ -3,7 +3,7 @@
 ;; Description: Плагин добавляет функционал получения местоположения игрока по его IP
 ;; CMD: /tgetip, /geoip
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b9 (Jan 23, 2015)
+;; Version: 1.0b11 (Mar 06, 2015)
 ;; Required modules: SAMP-UDF-Ex, Chatlog, CMD, JSON
 ;;
 
@@ -59,7 +59,7 @@ class GetIP
 
   get(notAdminChat = False)
   {
-    global GetIPToAdminChatBoolean
+    global GetIPToAdminChatBoolean, GetIPWithNickNameBoolean
 
     Chatlog.reader()
 
@@ -137,7 +137,11 @@ class GetIP
       addMessageToChatWindow("{C4EFFF}Дистанция: " (Distance = "N/A" ? "{FFFFFF}" : (Distance = 0 ? "{00FF00}" : (Round(Distance / 1000, 2) < 300 ? "{FFFF00}" : "{FF0000}"))) DistanceValue "{C4EFFF}.")
 
       if (GetIPToAdminChatBoolean && !notAdminChat) {
-        sendChatMessage("/a " this.GetIPUser ": " RegGetIP_Location " / " LastGetIP_Location " / " DistanceValue ".")
+        if (GetIPWithNickNameBoolean) {
+          sendChatMessage("/a " this.GetIPUser ": " RegGetIP_Location " / " LastGetIP_Location " / " DistanceValue ".")
+        } else {
+          sendChatMessage("/a Возможно: " RegGetIP_Location " / " LastGetIP_Location " / " DistanceValue ".")
+        }
       }
     } else {
       addMessageToChatWindow("{FF0000} Не найдено ни одного IP.")
@@ -392,6 +396,10 @@ CMD.commands["geoip"] := "GetIP.getOnlyForMe"
 CMD.commands["astats"] := "GetIP.aStats"
 CMD.commands["allstats"] := "GetIP.allStats"
 
-Hotkey, %GetIPKey%, GetIPHotKey
+if (StrLen(BanIPKey)) {
+  Hotkey, %GetIPKey%, GetIPHotKey
+}
 
-Hotkey, %GetIPSetNikKey%, GetIPSetNikHotKey
+if (StrLen(GetIPSetNikKey)) {
+  Hotkey, %GetIPSetNikKey%, GetIPSetNikHotKey
+}
