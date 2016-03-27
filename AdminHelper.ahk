@@ -1,142 +1,162 @@
 ;;
 ;; AdminHelper.ahk
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b5 (Jul 19, 2015)
 ;;
 
 #UseHook
-
 #NoEnv
-
 #IfWinActive GTA:SA:MP
-
-#Include %A_ScriptDir%
-
 #SingleInstance force
-
+#Include %A_ScriptDir%
 SetWorkingDir %A_ScriptDir%
 
 
 ; VersionChecker
 
-#include VersionChecker.ahk
+#Include %A_ScriptDir%\scripts\VersionChecker.ahk
 
+#Include %A_ScriptDir%\Updater.ahk
 
-; Configs
+#Include %A_ScriptDir%\scripts\ConfigReader.ahk
 
-#include Config.ahk
-
-
-; Modules Funcs
-
-#include modules\JSON.ahk
-#include modules\Chatlog-Funcs.ahk
-#include modules\SAMP-UDF-Ex.ahk
-#include modules\SAMP-UDF-Addon.ahk
-#include modules\SAMP-UsersListUpdater.ahk
-#include modules\SAMP-NearbyPlayers.ahk
-#include modules\SendChatSavingMessage.ahk
-#include modules\CMD-Funcs.ahk
-#include modules\IgnoreList.ahk
-
-
-; Plugins Funcs
-
-#include plugins\LastSMS-Funcs.ahk
-#include plugins\Connect-Funcs.ahk
-;#include plugins\AutoConnect-Funcs.ahk
-
-;;   1 lvl
-if (AdminLVL >= 1) {
-#include plugins\LastPM-Funcs.ahk
-#include plugins\PMToLastMuteOrDM-Funcs.ahk
+If (FileExist(".cache\AdminHelper.ahk")) {
+	Run .cache\AdminHelper.ahk %1%
+	ExitApp
+	Return
 }
 
-;;   2 lvl
-if (AdminLVL >= 2) {
-#include plugins\AutoHP-Funcs.ahk
-#include plugins\ReconLastPM-Funcs.ahk
-#include plugins\ReconLastWarning-Funcs.ahk
-#include plugins\ReconViewer-Funcs.ahk
-#include plugins\TagName-Funcs.ahk
+AdminHelper := {}
+AdminHelper["Modules"] := []
+AdminHelper["Plugins"] := []
+AdminHelper["Events"] := []
+
+Loop, Files, %A_ScriptDir%\modules\*.*, D
+{
+  AdminHelper["Modules"].Insert(A_LoopFileName)
 }
 
-;;   3 lvl
-if (AdminLVL >= 3) {
-#include plugins\TP-Funcs.ahk
-#include plugins\BanIP-Funcs.ahk
+Loop, % Config["EnabledPlugins"].MaxIndex()
+{
+  IniRead, PluginAdminLVL, % A_ScriptDir "\plugins\" Config["EnabledPlugins"][A_Index] "\Meta.ini", Config, AdminLVL
+
+  If (Config["AdminLVL"] >= PluginAdminLVL) {
+    AdminHelper["Plugins"].Insert(Config["EnabledPlugins"][A_Index])
+  }
 }
 
-;;   4 lvl
-if (AdminLVL >= 4) {
-#include plugins\GetIP-Funcs.ahk
+Loop, Files, %A_ScriptDir%\events\*.*, D
+{
+  AdminHelper["Events"].Insert(A_LoopFileName)
 }
 
-;;   5 lvl
-if (AdminLVL >= 5) {
-#include plugins\SetHPs-Funcs.ahk
-#include plugins\GiveGuns-Funcs.ahk
-#include plugins\Uninvites-Funcs.ahk
-#include plugins\Hbj-Funcs.ahk
+
+MergedFile =
+
+MergedFile .= "#UseHook`n"
+MergedFile .= "#NoEnv`n"
+MergedFile .= "#IfWinActive GTA:SA:MP`n"
+MergedFile .= "#SingleInstance force`n"
+MergedFile .= "#Include " A_ScriptDir "`n"
+MergedFile .= "SetWorkingDir " A_ScriptDir "`n"
+
+MergedFile .= "`n`n`;`; Configs`n`n"
+MergedFile .= "#Include scripts\ConfigReader.ahk`n"
+
+MergedFile .= "`n`n`;`; Libraries`n`n"
+
+Loop, Files, %A_ScriptDir%\libraries\*.ahk, F
+{
+  MergedFile .= "#Include libraries\" A_LoopFileName "`n"
 }
 
-; GUI
+MergedFile .= "`n`n`;`; Modules Funcs`n`n"
 
-#include GUI.ahk
+Loop, % AdminHelper["Modules"].MaxIndex()
+{
+  ModuleName := AdminHelper["Modules"][A_Index]
 
-
-; Modules Binds
-
-#include modules\CMD-Binds.ahk
-
-
-; Binds
-
-#include UserBinds.ahk
-
-Return
-
-
-; Modules Labels
-
-#include modules\Chatlog-Labels.ahk
-
-
-; Plugins Labels
-
-#include plugins\LastSMS-Labels.ahk
-;#include plugins\AutoConnect-Labels.ahk
-
-;;   1 lvl
-if (AdminLVL >= 1) {
-#include plugins\LastPM-Labels.ahk
-#include plugins\PMToLastMuteOrDM-Labels.ahk
+  If (FileExist(A_ScriptDir "\modules\" ModuleName "\Funcs.ahk")) {
+    MergedFile .= "#Include modules\" ModuleName "\Funcs.ahk`n"
+  }
 }
 
-;;   2 lvl
-if (AdminLVL >= 2) {
-#include plugins\AutoHP-Labels.ahk
-#include plugins\ReconLastPM-Labels.ahk
-#include plugins\ReconLastWarning-Labels.ahk
-#include plugins\ReconViewer-Labels.ahk
-#include plugins\TagName-Labels.ahk
+MergedFile .= "`n`n`;`; Events Funcs`n`n"
+
+Loop, % AdminHelper["Events"].MaxIndex()
+{
+  EventName := AdminHelper["Events"][A_Index]
+
+  If (FileExist(A_ScriptDir "\events\" EventName "\Funcs.ahk")) {
+    MergedFile .= "#Include events\" EventName "\Funcs.ahk`n"
+  }
 }
 
-;;   3 lvl
-if (AdminLVL >= 3) {
-#include plugins\TP-Labels.ahk
-#include plugins\BanIP-Labels.ahk
+MergedFile .= "`n`n`;`; Plugins Funcs`n`n"
+
+Loop, % AdminHelper["Plugins"].MaxIndex()
+{
+  PluginName := AdminHelper["Plugins"][A_Index]
+
+  If (FileExist(A_ScriptDir "\plugins\" PluginName "\Funcs.ahk")) {
+    MergedFile .= "#Include plugins\" PluginName "\Funcs.ahk`n`n"
+  }
 }
 
-;;   4 lvl
-if (AdminLVL >= 4) {
-#include plugins\GetIP-Labels.ahk
+MergedFile .= "`n`n`;`; GUI`n`n"
+MergedFile .= "#Include GUI.ahk`n"
+
+MergedFile .= "`n`n`;`; Modules Binds`n`n"
+
+Loop, % AdminHelper["Modules"].MaxIndex()
+{
+  ModuleName := AdminHelper["Modules"][A_Index]
+
+  If (FileExist(A_ScriptDir "\modules\" ModuleName "\Binds.ahk")) {
+    MergedFile .= "#Include modules\" ModuleName "\Binds.ahk`n`n"
+  }
 }
 
-;;   5 lvl
-if (AdminLVL >= 5) {
-#include plugins\SetHPs-Labels.ahk
-#include plugins\GiveGuns-Labels.ahk
-#include plugins\Uninvites-Labels.ahk
-#include plugins\Hbj-Labels.ahk
+MergedFile .= "`n`n`;`; Binds`n`n"
+
+MergedFile .= "#Include UserBinds.ahk`n"
+
+MergedFile .= "`n`nReturn`n`n"
+
+MergedFile .= "`n`n`;`; Modules Labels`n`n"
+
+Loop, % AdminHelper["Modules"].MaxIndex()
+{
+  ModuleName := AdminHelper["Modules"][A_Index]
+
+  If (FileExist(A_ScriptDir "\modules\" ModuleName "\Labels.ahk")) {
+    MergedFile .= "#Include modules\" ModuleName "\Labels.ahk`n`n"
+  }
 }
+
+MergedFile .= "`n`n`;`; Events Labels`n`n"
+
+Loop, % AdminHelper["Events"].MaxIndex()
+{
+  EventName := AdminHelper["Events"][A_Index]
+
+  If (FileExist(A_ScriptDir "\events\" EventName "\Labels.ahk")) {
+    MergedFile .= "#Include events\" EventName "\Labels.ahk`n"
+  }
+}
+
+MergedFile .= "`n`n`;`; Plugins Labels`n`n"
+
+Loop, % AdminHelper["Plugins"].MaxIndex()
+{
+  PluginName := AdminHelper["Plugins"][A_Index]
+
+  If (FileExist(A_ScriptDir "\plugins\" PluginName "\Labels.ahk")) {
+    MergedFile .= "#Include plugins\" PluginName "\Labels.ahk`n`n"
+  }
+}
+
+FileAppend, %MergedFile%`n, .cache\AdminHelper.ahk
+
+Sleep 1000
+
+Run .cache\AdminHelper.ahk %1%

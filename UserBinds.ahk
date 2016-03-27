@@ -1,8 +1,6 @@
 ;;
 ;; Example UserBinds.ahk for AdminHelper.ahk
 ;; Author: Danil Valov <danil@valov.me>
-;; Version: 1.0b4 (May 25, 2015)
-;; Required modules: SAMP-UDF-Ex, SendChatSavingMessage
 ;;
 ;;
 ;; *Краткая инструкция:*
