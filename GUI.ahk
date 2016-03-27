@@ -282,11 +282,14 @@ class AdminHelperGui
 
     For ModuleName, ModuleVariableObject in Config["modules"] {
       For ModuleVariableName, ModuleVariableData in ModuleVariableObject {
+        ModuleVariableInputName = GuiModule%ModuleName%%ModuleVariableName%Input
+        GuiControlGet, %ModuleVariableInputName%
+        ModuleVariableInputValue := %ModuleVariableInputName%
+
         if (SubStr(ModuleVariableName, -3) <> "File") {
-          ModuleVariableInputName = GuiModule%ModuleName%%ModuleVariableName%Input
-          GuiControlGet, %ModuleVariableInputName%
-          ModuleVariableInputValue := %ModuleVariableInputName%
           Config["modules"][ModuleName][ModuleVariableName] := ModuleVariableInputValue
+        } else {
+          this.textAreaSave(ModuleVariableData, ModuleVariableInputValue)
         }
       }
     }
@@ -299,12 +302,14 @@ class AdminHelperGui
 
     For PluginName, PluginVariableObject in Config["plugins"] {
       For PluginVariableName, PluginVariableData in PluginVariableObject {
-        if (SubStr(PluginVariableName, -3) <> "File") {
-          PluginVariableInputName = GuiPlugin%PluginName%%PluginVariableName%Input
-          GuiControlGet, %PluginVariableInputName%
-          PluginVariableInputValue := %PluginVariableInputName%
+        PluginVariableInputName = GuiPlugin%PluginName%%PluginVariableName%Input
+        GuiControlGet, %PluginVariableInputName%
+        PluginVariableInputValue := %PluginVariableInputName%
 
+        if (SubStr(PluginVariableName, -3) <> "File") {
           Config["plugins"][PluginName][PluginVariableName] := PluginVariableInputValue
+        } else {
+          this.textAreaSave(PluginVariableData, PluginVariableInputValue)
         }
       }
     }
@@ -385,13 +390,11 @@ class AdminHelperGui
     Return
   }
 
-  textAreaSave(VariableName, File)
+  textAreaSave(File, Value)
   {
     FileDelete, .cache\%File%.tmp
 
-    GuiControlGet, Gui%VariableName%Input
-    GuiTextAreaInputValue := Gui%VariableName%Input
-    FileAppend, %GuiTextAreaInputValue%, .cache\%File%.tmp
+    FileAppend, % Value, .cache\%File%.tmp
     FileCopy, .cache\%File%.tmp, %File%, 1
     FileDelete, .cache\%File%.tmp
 

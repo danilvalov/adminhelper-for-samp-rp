@@ -95,4 +95,3 @@ Events := new Events()
 Events.init()
 
 CMD.commands["event"] := "Events.event"
-CMD.commands["test"] := "Events.init"

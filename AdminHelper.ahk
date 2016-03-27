@@ -5,7 +5,6 @@
 
 #UseHook
 #NoEnv
-#IfWinActive GTA:SA:MP
 #SingleInstance force
 #Include %A_ScriptDir%
 SetWorkingDir %A_ScriptDir%
@@ -118,7 +117,7 @@ Loop, % AdminHelper["Modules"].MaxIndex()
 
 MergedFile .= "`n`n`;`; Binds`n`n"
 
-MergedFile .= "#Include UserBinds.ahk`n"
+MergedFile .= "#Include *i UserBinds.ahk`n"
 
 MergedFile .= "`n`nReturn`n`n"
 
