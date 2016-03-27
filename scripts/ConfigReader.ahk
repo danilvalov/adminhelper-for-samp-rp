@@ -47,6 +47,8 @@ class ConfigReader {
     Config := this.readIniSection("Meta.ini", "Options")
     Config := this.updateValuesForOptions(Config)
 
+    Config["EnabledPlugins"] := StrSplit(Config["EnabledPlugins"], ",")
+
     Config["About"] := this.readIniSection("Meta.ini", "About")
 
     Config["modules"] := {}
