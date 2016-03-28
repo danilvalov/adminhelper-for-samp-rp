@@ -8,6 +8,8 @@
 
 #Include scripts\ConfigReader.ahk
 
+DetectHiddenWindows, On
+
 
 class AdminHelperGui
 {
@@ -276,14 +278,26 @@ class AdminHelperGui
     Return
   }
 
+  changeKeyboardLayoutToDefault()
+  {
+    RegRead, DefaultKeyboardLayout , HKEY_CURRENT_USER, Keyboard Layout\Preload, 1
+    DefaultKeyboardLayout := DllCall("LoadKeyboardLayout", "Str", DefaultKeyboardLayout , "Int", 1)
+    PostMessage, 0x50, 0, %DefaultKeyboardLayout%, , ahk_id %A_ScriptHWND%
+    SendMessage, 0x50,, %DefaultKeyboardLayout%, , ahk_id %A_ScriptHWND%
+
+    Return
+  }
+
   dataUpdate()
   {
     Global Config
 
+    this.changeKeyboardLayoutToDefault()
+
     For ModuleName, ModuleVariableObject in Config["modules"] {
       For ModuleVariableName, ModuleVariableData in ModuleVariableObject {
         ModuleVariableInputName = GuiModule%ModuleName%%ModuleVariableName%Input
-        GuiControlGet, %ModuleVariableInputName%
+        GuiControlGet, %ModuleVariableInputName%, Settings:
         ModuleVariableInputValue := %ModuleVariableInputName%
 
         if (SubStr(ModuleVariableName, -3) <> "File") {
@@ -295,7 +309,7 @@ class AdminHelperGui
     }
 
     For PluginName, PluginVariableObject in this.plugins {
-      GuiControlGet, GuiPlugin%PluginName%Status
+      GuiControlGet, GuiPlugin%PluginName%Status, Settings:
 
       this.plugins[PluginName]["Status"] := GuiPlugin%PluginName%Status
     }
@@ -303,7 +317,7 @@ class AdminHelperGui
     For PluginName, PluginVariableObject in Config["plugins"] {
       For PluginVariableName, PluginVariableData in PluginVariableObject {
         PluginVariableInputName = GuiPlugin%PluginName%%PluginVariableName%Input
-        GuiControlGet, %PluginVariableInputName%
+        GuiControlGet, %PluginVariableInputName%, Settings:
         PluginVariableInputValue := %PluginVariableInputName%
 
         if (SubStr(PluginVariableName, -3) <> "File") {
@@ -314,7 +328,7 @@ class AdminHelperGui
       }
     }
 
-    GuiControlGet, GuiAdminLVLInput
+    GuiControlGet, GuiAdminLVLInput, Settings:
     Config["AdminLVL"] := GuiAdminLVLInput
 
     this.pluginsStatusesSave()
@@ -405,7 +419,7 @@ class AdminHelperGui
   {
     FileDelete, .cache\UserBinds.ahk.tmp
 
-    GuiControlGet, GuiUserBindsInput
+    GuiControlGet, GuiUserBindsInput, Settings:
     FileAppend, %GuiUserBindsInput%, .cache\UserBinds.ahk.tmp
     FileCopy, .cache\UserBinds.ahk.tmp, UserBinds.ahk, 1
     FileDelete, .cache\UserBinds.ahk.tmp

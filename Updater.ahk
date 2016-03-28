@@ -44,6 +44,26 @@ class Updater
     Return
   }
 
+  RemoveOldVersion() {
+    Loop, Files, % UpdateDirPath "\*.*", FD
+    {
+      if A_LoopFileAttrib contains D
+      {
+        if A_LoopFileName not contains .cache
+        {
+          FileRemoveDir, %A_LoopFileName%, 1
+        }
+      } else {
+        if A_LoopFileName not contains UserBinds.ahk,UninvitesList.ini
+        {
+          FileDelete, %A_LoopFileName%
+        }
+      }
+    }
+
+    Return
+  }
+
   Update() {
     FullPathToProjectDir := SubStr(A_ScriptFullPath, 1, -StrLen(".cache\Updater.ahk"))
 
@@ -59,6 +79,8 @@ class Updater
     FileRemoveDir, .cache\updateDir, 1
 
     UrlDownloadToFile, % Repository_Data["zipball_url"], .cache\update.zip
+
+    this.RemoveOldVersion()
 
     Unz(FullPathToProjectDir ".cache\update.zip", FullPathToProjectDir ".cache\updateDir")
 

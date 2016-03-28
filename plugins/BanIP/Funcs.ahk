@@ -5,7 +5,9 @@
 
 class BanIP
 {
-  lastBanIP :=
+  lastBanIP := ""
+  checkAccountIsBanned := 0
+  checkAccountIsOffline := 0
 
   nick(Data)
   {
@@ -71,6 +73,73 @@ class BanIP
 
     Return
   }
+
+  banWithBanIP(Data) {
+    Global Config
+
+    if (Data[4] && StrLen(Data[4]) && Data[4] = "1") {
+      this.lastBanIP := ""
+
+      Sleep 1200
+
+      checkAccountIsOffline := 0
+
+      Chatlog.reader()
+
+      if (this.checkAccountIsOffline = 1) {
+        Return
+      }
+
+      if (!this.lastBanIP || !StrLen(this.lastBanIP)) {
+        Return
+      }
+
+      sendChatMessage("/banip " this.lastBanIP)
+
+      if (Config["AdminLVL"] >= 4 && Config["plugins"]["BanIP"]["GetIPUsersBoolean"]) {
+        sendChatMessage("/pgetip 4 " this.lastBanIP)
+      }
+    }
+
+    Return
+  }
+
+  offbanWithBanIP(Data) {
+    if (Data[4] && StrLen(Data[4]) && Data[4] = "1") {
+      NickName := RegExReplace(Data[2], "[^a-zA-Z0-9\_]", "")
+
+      if (!NickName || !StrLen(NickName) || NickName != Data[2] || StrLen(NickName) < 3 || StrLen(NickName) > 20) {
+        Return
+      }
+
+      Sleep 1200
+
+      this.checkAccountIsBanned := 0
+
+      Chatlog.reader()
+
+      if (this.checkAccountIsBanned = 1) {
+        Return
+      }
+
+      GetIP.RegGetIP :=
+      GetIP.LastGetIP :=
+
+      sendChatMessage("/agetip " NickName)
+
+      Sleep 1200
+
+      Chatlog.reader()
+
+      if (!GetIP.LastGetIP || !StrLen(GetIP.LastGetIP)) {
+        Return
+      }
+
+      sendChatMessage("/banip " GetIP.LastGetIP)
+    }
+
+    Return
+  }
 }
 
 BanIP := new BanIP()
@@ -78,6 +147,11 @@ BanIP := new BanIP()
 
 CMD.commands["banipn"] := "BanIP.nick"
 CMD.commands["unbanipn"] := "BanIP.nick"
+CMD.commands["ban"] := "BanIP.banWithBanIP"
+CMD.commands["sban"] := "BanIP.banWithBanIP"
+CMD.commands["iban"] := "BanIP.banWithBanIP"
+CMD.commands["offban"] := "BanIP.offbanWithBanIP"
+CMD.commands["ioffban"] := "BanIP.offbanWithBanIP"
 
 
 BanIPChatlogChecker(ChatlogString)
@@ -98,6 +172,14 @@ BanIPChatlogChecker(ChatlogString)
     if (StrLen(LastBanIP)) {
       BanIP.lastBanIP := LastBanIP
     }
+  }
+
+  if (InStr(ChatlogString, "Этот аккаунт уже забанен")) {
+    BanIP.checkAccountIsBanned := 1
+  }
+
+  if (InStr(ChatlogString, "Игрок оффлайн!")) {
+    BanIP.checkAccountIsOffline := 1
   }
 }
 

@@ -17,7 +17,6 @@ class AutoConnect
   _nickName := ""
   _autoConnectOnStartup := 0
   _saveChatlog := 0
-  _problemConnection := 0
 
   __stringJoin(Array, Delimiter = ";")
   {
@@ -164,7 +163,6 @@ class AutoConnect
     IniRead, LocalNickName, % this._configFile, Connect, NickName, % this._nickName
     IniRead, LocalServerIP, % this._configFile, Connect, ServerIP, % this._serverIP
     IniRead, LocalAutoConnectOnStartup, % this._configFile, Connect, AutoConnectOnStartup, % this._autoConnectOnStartup
-    IniRead, LocalProblemConnection, % this._configFile, Connect, ProblemConnection, % this._problemConnection
     IniRead, LocalSaveChatlog, % this._configFile, Connect, SaveChatlog, % this._saveChatlog
 
     this._sampFile := LocalSAMPFile
@@ -172,7 +170,6 @@ class AutoConnect
     this._nickName := LocalNickName
     this._serverIP := LocalServerIP
     this._autoConnectOnStartup := LocalAutoConnectOnStartup
-    this._problemConnection := LocalProblemConnection
     this._saveChatlog := LocalSaveChatlog
 
     Return
@@ -185,7 +182,6 @@ class AutoConnect
     IniWrite, % this._nickName, % this._configFile, Connect, NickName
     IniWrite, % this._serverIP, % this._configFile, Connect, ServerIP
     IniWrite, % this._autoConnectOnStartup, % this._configFile, Connect, AutoConnectOnStartup
-    IniWrite, % this._problemConnection, % this._configFile, Connect, ProblemConnection
     IniWrite, % this._saveChatlog, % this._configFile, Connect, SaveChatlog
 
     Return
@@ -202,9 +198,9 @@ class AutoConnect
 
     this.getConfig()
 
-    NameServersList := []
+    Local NameServersList := []
 
-    LocalServerIndex := 1
+    Local LocalServerIndex := 1
 
     Loop, % this._serversList.MaxIndex()
     {
@@ -244,10 +240,7 @@ class AutoConnect
     Gui, AutoConnect:Add, Checkbox, w320 y+10 x10 vAutoConnectSaveChatlog, Сохранять историю сообщений
     GuiControl, , AutoConnectSaveChatlog, % this._saveChatlog
 
-    Gui, AutoConnect:Add, Checkbox, w320 y+10 x10 vAutoConnectProblemConnection, Имеются проблемы с подключением к 10-15 серверам
-    GuiControl, , AutoConnectProblemConnection, % this._problemConnection
-
-    Gui, AutoConnect:Add, Button, x200 y+15 gAutoConnectConnect, % !checkHandles() ? "Подключиться" : "Сохранить"
+    Gui, AutoConnect:Add, Button, x200 y+25 gAutoConnectConnect, % !checkHandles() ? "Подключиться" : "Сохранить"
     Gui, AutoConnect:Add, Button, x+10 gAutoConnectClose, Закрыть
 
     if (!Force && this._autoConnectOnStartup && this.connect(Startup)) {
@@ -266,7 +259,6 @@ class AutoConnect
     GuiControlGet, AutoConnectNickName
     GuiControlGet, AutoConnectServerName
     GuiControlGet, AutoConnectOnStartup
-    GuiControlGet, AutoConnectProblemConnection
     GuiControlGet, AutoConnectSaveChatlog
 
     AutoConnectNickName := Trim(AutoConnectNickName)
@@ -279,7 +271,6 @@ class AutoConnect
       this._nickName := AutoConnectNickName
       this._serverIP := AutoConnectServerIP
       this._autoConnectOnStartup := AutoConnectOnStartup
-      this._problemConnection := AutoConnectProblemConnection
       this._saveChatlog := AutoConnectSaveChatlog
 
       LocalServer := this._serverIP
@@ -307,24 +298,6 @@ class AutoConnect
 
       ServerIndexByIP := this.getServerIndexByIP(this._serverIP)
 
-      if (this._problemConnection && ServerIndexByIP && ServerIndexByIP - 0 >= 10) {
-        LocalServer := this._serversList[9].ip
-
-        RunWait, %LocalSAMPFile% -c -h%LocalServer%-p7777-n%LocalNickName%
-
-        Sleep 5000
-
-        this._checkerRunning := 0
-
-        Chatlog.reader()
-
-        this._checkerRunning := 1
-
-        Chatlog.startTimer()
-      } else {
-        RunWait, %LocalSAMPFile% -c -h%LocalServer%-p7777-n%LocalNickName%
-      }
-
       Return True
     } else if (!StrLen(LocalSAMPFile)) {
       MsgBox, Вы не указали путь до файла `samp.exe`
@@ -338,7 +311,6 @@ class AutoConnect
       this._nickName := AutoConnectNickName
       this._serverIP := AutoConnectServerIP
       this._autoConnectOnStartup := AutoConnectOnStartup
-      this._problemConnection := AutoConnectProblemConnection
       this._saveChatlog := AutoConnectSaveChatlog
 
       this.saveConfig()
@@ -383,7 +355,5 @@ AutoConnectChecker(ChatlogString)
 }
 
 Chatlog.checker.Insert("AutoConnectChecker")
-
-
 
 AutoConnect.init()

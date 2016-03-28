@@ -7,6 +7,16 @@ class IgnoreList
 {
   _ignoreList := []
 
+  __hasValueInArray(Array, Value)
+  {
+    for Key, Val in Array {
+      if (Val = Value) {
+        Return Key
+      }
+    }
+    Return 0
+  }
+
   ignoreListRead()
   {
     Global Config
@@ -51,9 +61,99 @@ class IgnoreList
 
     Return
   }
+
+  getNicksFromData(Data)
+  {
+    Nicks := []
+
+    Loop, % (Data.MaxIndex() - 1)
+    {
+      DataValue := Data[A_Index + 1]
+
+      NickName := RegExReplace(DataValue, "[^a-zA-Z0-9\_]", "")
+
+      if (StrLen(NickName) && NickName = Data[2]) {
+        UserId := RegExReplace(DataValue, "[^0-9]", "")
+
+        if (StrLen(UserId) && StrLen(UserId) >= 0 && StrLen(UserId) <= 999 && UserId = NickName) {
+          hardUpdateOScoreboardData()
+
+          NickName := getPlayerNameById(UserId)
+
+          if (!NickName) {
+            addMessageToChatWindow("{FF0000} »грок с ID " UserId " не найден в игре.")
+
+            Continue
+          }
+
+          Nicks.Insert(NickName)
+        } else {
+          if (StrLen(NickName) < 3 || StrLen(NickName) > 20) {
+            addMessageToChatWindow("{FF0000} Ќеверно введЄн ник игрока: " NickName ".")
+
+            Continue
+          }
+
+          Nicks.Insert(NickName)
+        }
+      }
+    }
+
+    Return Nicks
+  }
+
+  add(Data)
+  {
+    addMessageToChatWindow("{FFFF00}ƒобавлены в »гнорЋист следующие игроки:")
+
+    NickNames := this.getNicksFromData(Data)
+
+    Loop, % NickNames.MaxIndex()
+    {
+      NickName := NickNames[A_Index]
+
+      if (this.__hasValueInArray(this._ignoreList, NickName)) {
+        addMessageToChatWindow("{FF0000} " NickName " пропущен, т.к. уже находитс€ в »гнорЋисте.")
+
+        Continue
+      }
+
+      this._ignoreList.Insert(NickNames[A_Index])
+      addMessageToChatWindow("{00D900} " NickName)
+    }
+
+    Return
+  }
+
+  remove(Data)
+  {
+    addMessageToChatWindow("{FFFF00}”далены из »гнорЋиста следующие игроки:")
+
+    NickNames := this.getNicksFromData(Data)
+
+    Loop, % NickNames.MaxIndex()
+    {
+      NickName := NickNames[A_Index]
+      NickNameIndex := this.__hasValueInArray(this._ignoreList, NickName)
+
+      if (!NickNameIndex) {
+        addMessageToChatWindow("{FF0000} " NickName " не найден в »гнорЋисте.")
+
+        Continue
+      }
+
+      this._ignoreList.RemoveAt(NickNameIndex)
+      addMessageToChatWindow("{00D900} " NickName)
+    }
+
+    Return
+  }
 }
 
 IgnoreList := new IgnoreList()
+
+CMD.commands["/ignore"] := "IgnoreList.add"
+CMD.commands["/unignore"] := "IgnoreList.remove"
 
 checkInIgnoreList(PlayerNick)
 {

@@ -75,6 +75,15 @@ class DayZEvent
       Return
     }
 
+    if (NearestPlayer.ID != this.__zero) {
+      this.__zero := NearestPlayer.ID
+      this.__step := 1
+
+      addMessageToChatWindow("{FF0000} Нулевой пациент изменён на " NearestPlayer.NAME "[" this.__zero "].")
+
+      Return
+    }
+
     if (NearestPlayer.HP <= 0) {
       this.__nearestPlayer := {}
       this.__nearestPlayer["ID"] := -1

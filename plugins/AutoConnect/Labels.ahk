@@ -4,7 +4,7 @@
 ;;
 
 AutoConnectGUIOpen:
-  AutoConnect.generateGUI(1)
+  AutoConnect.generateGUI(1, 0)
 
   Return
 

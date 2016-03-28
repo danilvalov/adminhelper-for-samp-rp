@@ -5,8 +5,8 @@
 
 HotKeyRegister(HotKey, Callback)
 {
-  if (HotKey && StrLen(HotKey) && Hparse(HotKey, false)) {
-    Hotkey, % Hparse(HotKey, false), % Callback
+  if (HotKey && StrLen(HotKey)) {
+    Hotkey, % HotKey, % Callback
   }
 
   Return
